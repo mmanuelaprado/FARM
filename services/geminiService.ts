@@ -2,18 +2,20 @@
 import { GoogleGenAI } from "@google/genai";
 
 /**
- * Tenta obter a chave de API de forma segura.
- * No Vercel Browser, process.env.API_KEY pode resultar em erro de referência.
+ * Obtém a chave de API de forma segura.
+ * No navegador (Vercel Client-side), 'process' não existe.
+ * Acessar process.env diretamente causa ReferenceError e quebra a aplicação (Tela Branca).
  */
 const getSafeApiKey = (): string => {
   try {
+    // Usamos uma verificação de tipo para evitar ReferenceError
     // @ts-ignore
-    if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
-      // @ts-ignore
-      return process.env.API_KEY;
+    const env = typeof process !== 'undefined' ? process.env : (window as any).process?.env;
+    if (env && env.API_KEY) {
+      return env.API_KEY;
     }
   } catch (e) {
-    // Silencia o erro para evitar que a aplicação pare
+    console.warn("Ambiente de variáveis não detectado.");
   }
   return "";
 };
@@ -22,7 +24,7 @@ export const getFarmAdvice = async (coins: number, level: number, inventory: any
   const apiKey = getSafeApiKey();
   
   if (!apiKey) {
-    return "Sua fazenda está linda hoje! Continue cultivando.";
+    return "O tempo está ótimo para cultivar! Continue o bom trabalho.";
   }
 
   try {
@@ -39,6 +41,6 @@ export const getFarmAdvice = async (coins: number, level: number, inventory: any
     return response.text?.trim() || "Plante mais para ganhar mais XP!";
   } catch (error) {
     console.error("Gemini advice error:", error);
-    return "O dia está ótimo para trabalhar na terra!";
+    return "Mantenha o foco na sua produção e colha bons frutos!";
   }
 };
