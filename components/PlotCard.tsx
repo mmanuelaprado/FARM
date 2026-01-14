@@ -20,13 +20,12 @@ const PlotCard: React.FC<PlotCardProps> = ({ plot, selectedTool, selectedSeed, o
       interval = setInterval(() => {
         const now = Date.now();
         const elapsedMs = now - plot.plantedAt!;
-        // Se regado, o tempo passa 2x mais rápido
         const effectiveGrowthTime = plot.watered ? crop.growthTime / 2 : crop.growthTime;
         const p = Math.min(100, (elapsedMs / (effectiveGrowthTime * 1000)) * 100);
         
         setProgress(p);
         if (p >= 100) clearInterval(interval);
-      }, 200);
+      }, 300);
     } else {
       setProgress(0);
     }
@@ -38,27 +37,23 @@ const PlotCard: React.FC<PlotCardProps> = ({ plot, selectedTool, selectedSeed, o
   return (
     <div 
       onClick={(e) => onAction(plot.id, e)}
-      className={`relative w-full aspect-square rounded-2xl cursor-pointer transition-all duration-300 transform active:scale-90
-        ${plot.watered ? 'bg-amber-900/50 shadow-inner' : 'bg-amber-800/40'}
-        ${!plot.crop ? 'hover:brightness-110' : ''}
-        border-4 ${plot.watered ? 'border-blue-400/50' : 'border-amber-950/20'} 
+      className={`relative w-full aspect-square rounded-xl cursor-pointer transition-all duration-200 transform active:scale-95
+        ${plot.watered ? 'bg-amber-900/60 shadow-inner' : 'bg-amber-800/40'}
+        border-2 ${plot.watered ? 'border-blue-400' : 'border-amber-950/20'} 
         flex items-center justify-center overflow-hidden`}
     >
-      {/* Visual de Terra Seca/Molhada */}
-      <div className={`absolute inset-0 transition-colors duration-500 ${plot.watered ? 'bg-blue-900/10' : ''}`} />
-
       {!plot.crop ? (
-        <div className="flex flex-col items-center opacity-40 group-hover:opacity-100">
-          <span className="text-2xl">{selectedTool === ToolType.SEED ? '🌱' : '💧'}</span>
+        <div className="flex flex-col items-center opacity-30">
+          <span className="text-xl">{selectedTool === ToolType.SEED ? '🌱' : '💧'}</span>
         </div>
       ) : (
-        <div className="flex flex-col items-center z-10">
-          <div className={`text-4xl transition-all duration-500 ${isReady ? 'sway scale-125 drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]' : 'scale-75 opacity-80'}`}>
+        <div className="flex flex-col items-center z-10 w-full h-full justify-center">
+          <div className={`text-3xl transition-all duration-500 ${isReady ? 'sway scale-110' : 'scale-75 opacity-80'}`}>
             {crop?.icon}
           </div>
           
           {!isReady && (
-            <div className="absolute bottom-2 left-2 right-2 h-1.5 bg-black/30 rounded-full overflow-hidden">
+            <div className="absolute bottom-1.5 left-1.5 right-1.5 h-1 bg-black/30 rounded-full overflow-hidden">
               <div 
                 className={`h-full transition-all duration-300 ${plot.watered ? 'bg-blue-400' : 'bg-green-400'}`}
                 style={{ width: `${progress}%` }}
@@ -67,13 +62,13 @@ const PlotCard: React.FC<PlotCardProps> = ({ plot, selectedTool, selectedSeed, o
           )}
           
           {isReady && (
-            <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full w-6 h-6 flex items-center justify-center animate-bounce shadow-lg text-[10px]">
+            <div className="absolute top-1 right-1 bg-yellow-400 rounded-full w-4 h-4 flex items-center justify-center animate-bounce shadow-md text-[8px]">
               ✨
             </div>
           )}
 
           {plot.watered && !isReady && (
-            <div className="absolute top-1 left-1 animate-pulse">
+            <div className="absolute top-1 left-1 text-[10px] animate-pulse">
               💧
             </div>
           )}

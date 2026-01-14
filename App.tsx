@@ -15,24 +15,32 @@ interface FloatingText {
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'crops' | 'ranch'>('crops');
+  const [isLoaded, setIsLoaded] = useState(false);
+  
   const [gameState, setGameState] = useState<GameState>(() => {
+    const defaultSeeds = { 
+      [CropType.WHEAT]: 5, 
+      [CropType.CORN]: 0, 
+      [CropType.CARROT]: 0, 
+      [CropType.TOMATO]: 0, 
+      [CropType.PUMPKIN]: 0 
+    };
+
     try {
       const saved = localStorage.getItem('gemini_harvest_state');
-      const defaultSeeds = { [CropType.WHEAT]: 5, [CropType.CORN]: 0, [CropType.CARROT]: 0, [CropType.TOMATO]: 0, [CropType.PUMPKIN]: 0 };
-      
       if (saved) {
         const parsed = JSON.parse(saved);
         return {
-          coins: Number(parsed.coins) || INITIAL_COINS,
-          xp: Number(parsed.xp) || 0,
-          level: Number(parsed.level) || 1,
+          coins: typeof parsed.coins === 'number' ? parsed.coins : INITIAL_COINS,
+          xp: typeof parsed.xp === 'number' ? parsed.xp : 0,
+          level: typeof parsed.level === 'number' ? parsed.level : 1,
           inventory: parsed.inventory || {},
           seedInventory: parsed.seedInventory || defaultSeeds,
-          animals: parsed.animals || []
+          animals: Array.isArray(parsed.animals) ? parsed.animals : []
         };
       }
     } catch (e) {
-      console.error("Error loading state", e);
+      console.warn("Could not load save state", e);
     }
 
     return {
@@ -40,7 +48,7 @@ const App: React.FC = () => {
       xp: 0,
       level: 1,
       inventory: {},
-      seedInventory: { [CropType.WHEAT]: 5, [CropType.CORN]: 0, [CropType.CARROT]: 0, [CropType.TOMATO]: 0, [CropType.PUMPKIN]: 0 },
+      seedInventory: defaultSeeds,
       animals: []
     };
   });
@@ -58,29 +66,40 @@ const App: React.FC = () => {
 
   const [selectedTool, setSelectedTool] = useState<ToolType>(ToolType.SEED);
   const [selectedSeed, setSelectedSeed] = useState<CropType>(CropType.WHEAT);
-  const [advice, setAdvice] = useState<string>("Carregando sua fazenda...");
+  const [advice, setAdvice] = useState<string>("Sua fazenda está pronta!");
   const [isStoreOpen, setIsStoreOpen] = useState(false);
   const [storeTab, setStoreTab] = useState<'buy' | 'sell' | 'animals'>('buy');
   const [floatingTexts, setFloatingTexts] = useState<FloatingText[]>([]);
   const [currentTime, setCurrentTime] = useState(Date.now());
 
   useEffect(() => {
+    setIsLoaded(true);
     const timer = setInterval(() => setCurrentTime(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('gemini_harvest_state', JSON.stringify(gameState));
-    localStorage.setItem('gemini_harvest_plots', JSON.stringify(plots));
-  }, [gameState, plots]);
+    if (isLoaded) {
+      localStorage.setItem('gemini_harvest_state', JSON.stringify(gameState));
+      localStorage.setItem('gemini_harvest_plots', JSON.stringify(plots));
+    }
+  }, [gameState, plots, isLoaded]);
 
   useEffect(() => {
     const fetchAdvice = async () => {
-      const text = await getFarmAdvice(gameState.coins, gameState.level, gameState.inventory);
-      setAdvice(text);
+      try {
+        const text = await getFarmAdvice(gameState.coins, gameState.level, gameState.inventory);
+        setAdvice(text);
+      } catch (err) {
+        setAdvice("O tempo está ótimo para colher!");
+      }
     };
-    fetchAdvice();
-  }, [gameState.level, isStoreOpen]);
+    if (isLoaded) fetchAdvice();
+  }, [gameState.level, isStoreOpen, isLoaded]);
+
+  if (!isLoaded) {
+    return <div className="h-screen w-full bg-sky-400 flex items-center justify-center font-game text-white">CARREGANDO...</div>;
+  }
 
   const addFloatingText = (x: number, y: number, text: string, color: string = "text-yellow-500") => {
     const id = Date.now() + Math.random();
@@ -92,8 +111,7 @@ const App: React.FC = () => {
     const plot = plots.find(p => p.id === id);
     if (!plot) return;
     const cropData = plot.crop ? CROPS[plot.crop] : null;
-    if (!cropData && selectedTool === ToolType.WATER) return;
-
+    
     const now = Date.now();
     const effectiveGrowth = plot.watered ? (cropData?.growthTime || 0) / 2 : (cropData?.growthTime || 0);
     const isReady = plot.plantedAt && (now - plot.plantedAt) / 1000 >= effectiveGrowth;
@@ -109,10 +127,10 @@ const App: React.FC = () => {
   };
 
   const plant = (id: number) => {
-    if (gameState.seedInventory[selectedSeed] > 0) {
+    if ((gameState.seedInventory[selectedSeed] || 0) > 0) {
       setGameState(prev => ({ 
         ...prev, 
-        seedInventory: { ...prev.seedInventory, [selectedSeed]: prev.seedInventory[selectedSeed] - 1 } 
+        seedInventory: { ...prev.seedInventory, [selectedSeed]: (prev.seedInventory[selectedSeed] || 0) - 1 } 
       }));
       setPlots(prev => prev.map(p => p.id === id ? { ...p, crop: selectedSeed, plantedAt: Date.now(), watered: false } : p));
     } else {
@@ -168,142 +186,142 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-full flex flex-col bg-gradient-to-b from-sky-400 to-sky-200 overflow-hidden relative font-sans">
+    <div className="h-screen w-full flex flex-col bg-gradient-to-b from-sky-400 to-sky-200 overflow-hidden relative font-sans text-slate-800">
       {floatingTexts.map(t => (
-        <div key={t.id} className="fixed z-[100] font-game text-xl pointer-events-none animate-bounce" style={{ left: t.x, top: t.y, transform: 'translateX(-50%)', color: 'orange' }}>{t.text}</div>
+        <div key={t.id} className="fixed z-[100] font-game text-lg pointer-events-none animate-bounce" style={{ left: t.x, top: t.y, transform: 'translateX(-50%)', color: 'orange' }}>{t.text}</div>
       ))}
 
-      {/* Header */}
-      <div className="z-10 p-4 pt-6 flex justify-between items-start">
-        <div className="flex flex-col gap-2">
-          <div className="bg-white/90 backdrop-blur px-4 py-1.5 rounded-2xl shadow-xl flex items-center gap-3 border-2 border-amber-500">
-            <span className="text-2xl">💰</span>
-            <span className="font-game text-xl text-amber-700">{gameState.coins}</span>
+      {/* Header Compacto */}
+      <div className="z-10 px-3 pt-3 flex justify-between items-start gap-2">
+        <div className="flex flex-col gap-1.5 flex-1">
+          <div className="bg-white/90 backdrop-blur px-3 py-1 rounded-xl shadow-lg flex items-center gap-2 border-2 border-amber-500 w-fit">
+            <span className="text-xl">💰</span>
+            <span className="font-game text-lg text-amber-700">{gameState.coins}</span>
           </div>
-          <div className="bg-white/90 backdrop-blur px-3 py-1 rounded-xl shadow-lg border-2 border-blue-400 w-32">
-            <div className="flex justify-between text-[10px] font-bold text-blue-600 uppercase"><span>Nível {gameState.level}</span></div>
-            <div className="h-2 bg-blue-100 rounded-full mt-1">
-              <div className="h-full bg-blue-500 transition-all duration-1000" style={{ width: `${(gameState.xp % XP_PER_LEVEL)}%` }} />
+          <div className="bg-white/90 backdrop-blur px-2 py-1 rounded-lg shadow-md border-2 border-blue-400 w-28">
+            <div className="flex justify-between text-[8px] font-bold text-blue-600 uppercase"><span>Nível {gameState.level}</span></div>
+            <div className="h-1.5 bg-blue-100 rounded-full mt-0.5">
+              <div className="h-full bg-blue-500 transition-all duration-500" style={{ width: `${(gameState.xp % XP_PER_LEVEL)}%` }} />
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 items-end">
-          <button onClick={() => setIsStoreOpen(true)} className="bg-amber-500 p-3 rounded-2xl shadow-xl border-b-4 border-amber-700 active:border-b-0 active:translate-y-1 transition-all"><span className="text-2xl">🏪</span></button>
-          <div className="flex bg-white/50 backdrop-blur p-1 rounded-2xl border-2 border-white/50">
-             <button onClick={() => setActiveTab('crops')} className={`px-4 py-2 rounded-xl text-xs font-game transition-all ${activeTab === 'crops' ? 'bg-green-500 text-white' : 'text-green-800'}`}>HORTA</button>
-             <button onClick={() => setActiveTab('ranch')} className={`px-4 py-2 rounded-xl text-xs font-game transition-all ${activeTab === 'ranch' ? 'bg-orange-500 text-white' : 'text-orange-800'}`}>RANCHO</button>
+        <div className="flex items-center gap-2">
+          <div className="flex bg-white/50 backdrop-blur p-0.5 rounded-xl border border-white/50 shadow-sm">
+             <button onClick={() => setActiveTab('crops')} className={`px-3 py-1.5 rounded-lg text-[10px] font-game transition-all ${activeTab === 'crops' ? 'bg-green-500 text-white shadow-md' : 'text-green-800'}`}>HORTA</button>
+             <button onClick={() => setActiveTab('ranch')} className={`px-3 py-1.5 rounded-lg text-[10px] font-game transition-all ${activeTab === 'ranch' ? 'bg-orange-500 text-white shadow-md' : 'text-orange-800'}`}>RANCHO</button>
           </div>
+          <button onClick={() => setIsStoreOpen(true)} className="bg-amber-500 p-2.5 rounded-xl shadow-lg border-b-2 border-amber-700 active:translate-y-0.5 active:border-b-0 transition-all"><span className="text-xl">🏪</span></button>
         </div>
       </div>
 
-      {/* Advice */}
-      <div className="z-10 px-4 mt-2">
-        <div className="bg-white/95 rounded-3xl p-3 shadow-xl border-b-4 border-green-500 flex items-center gap-3">
-          <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center text-2xl">👴</div>
-          <p className="text-xs font-semibold text-slate-700 italic leading-tight">"{advice}"</p>
+      {/* Advice Compacto */}
+      <div className="z-10 px-3 mt-2">
+        <div className="bg-white/95 rounded-2xl p-2 shadow-md border-b-2 border-green-500 flex items-center gap-2">
+          <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center text-lg flex-shrink-0">👴</div>
+          <p className="text-[10px] font-semibold text-slate-700 italic leading-tight line-clamp-2">"{advice}"</p>
         </div>
       </div>
 
-      {/* Main Area */}
-      <div className="z-10 flex-1 flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md overflow-y-auto max-h-[55vh] scrollbar-hide">
+      {/* Main Area com Rolagem Melhorada */}
+      <div className="z-10 flex-1 flex flex-col items-center justify-start p-3 mt-1 overflow-hidden">
+        <div className="w-full max-w-md overflow-y-auto max-h-full pb-32 scrollbar-hide">
           {activeTab === 'crops' ? (
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               {plots.map(plot => (
                 <PlotCard key={plot.id} plot={plot} selectedTool={selectedTool} selectedSeed={selectedSeed} onAction={(id, e) => handlePlotAction(id, e)} />
               ))}
               {plots.length < MAX_PLOT_COUNT && (
-                <button onClick={() => { if(gameState.coins >= PLOT_UNLOCK_COST) { setGameState(prev=>({...prev, coins: prev.coins-PLOT_UNLOCK_COST})); setPlots(prev=>[...prev, {id: prev.length, crop:null, plantedAt:null, watered:false}]); } }} className="w-full aspect-square rounded-2xl border-4 border-dashed border-white/40 flex flex-col items-center justify-center bg-white/10 active:scale-95 transition-all">
-                  <span className="text-xl text-white/60">➕</span>
-                  <span className="text-[10px] font-game text-white/60">${PLOT_UNLOCK_COST}</span>
+                <button onClick={() => { if(gameState.coins >= PLOT_UNLOCK_COST) { setGameState(prev=>({...prev, coins: prev.coins-PLOT_UNLOCK_COST})); setPlots(prev=>[...prev, {id: prev.length, crop:null, plantedAt:null, watered:false}]); } }} className="w-full aspect-square rounded-xl border-2 border-dashed border-white/40 flex flex-col items-center justify-center bg-white/10 active:scale-95 transition-all">
+                  <span className="text-lg text-white/60">➕</span>
+                  <span className="text-[8px] font-game text-white/60">${PLOT_UNLOCK_COST}</span>
                 </button>
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               {gameState.animals.map(animal => {
                 const data = ANIMALS[animal.type];
                 const elapsed = (currentTime - animal.lastProducedAt) / 1000;
                 const progress = Math.min(100, (elapsed / data.produceTime) * 100);
                 const isReady = progress >= 100;
                 return (
-                  <div key={animal.id} onClick={(e) => collectFromAnimal(animal.id, e)} className="bg-white/90 p-4 rounded-[2rem] shadow-xl border-4 border-orange-200 flex flex-col items-center relative active:scale-95 transition-transform cursor-pointer">
-                    <span className={`text-6xl mb-2 ${isReady ? 'animate-bounce' : ''}`}>{data.icon}</span>
-                    <span className="font-game text-xs text-orange-800 uppercase text-center">{data.name}</span>
-                    <div className="w-full h-3 bg-orange-100 rounded-full mt-2 overflow-hidden border border-orange-200">
+                  <div key={animal.id} onClick={(e) => collectFromAnimal(animal.id, e)} className="bg-white/90 p-3 rounded-2xl shadow-md border-2 border-orange-200 flex flex-col items-center relative active:scale-95 transition-transform cursor-pointer">
+                    <span className={`text-5xl mb-1 ${isReady ? 'animate-bounce' : ''}`}>{data.icon}</span>
+                    <span className="font-game text-[10px] text-orange-800 uppercase text-center">{data.name}</span>
+                    <div className="w-full h-2 bg-orange-100 rounded-full mt-1.5 overflow-hidden border border-orange-200">
                        <div className={`h-full transition-all duration-300 ${isReady ? 'bg-yellow-400' : 'bg-orange-400'}`} style={{width: `${progress}%`}} />
                     </div>
                     {isReady && (
-                      <div className="absolute -top-2 -right-2 bg-yellow-400 w-10 h-10 rounded-full shadow-lg border-2 border-white flex items-center justify-center text-xl animate-pulse">
+                      <div className="absolute -top-1 -right-1 bg-yellow-400 w-8 h-8 rounded-full shadow-lg border-2 border-white flex items-center justify-center text-lg animate-pulse">
                         {data.produceIcon}
                       </div>
                     )}
                   </div>
                 );
               })}
-              <button onClick={() => { setStoreTab('animals'); setIsStoreOpen(true); }} className="aspect-square bg-white/20 border-4 border-dashed border-white/40 rounded-[2rem] flex flex-col items-center justify-center active:scale-95 transition-all">
-                <span className="text-4xl">🐾</span>
-                <span className="font-game text-[10px] text-white/60 mt-2">LOJA</span>
+              <button onClick={() => { setStoreTab('animals'); setIsStoreOpen(true); }} className="aspect-square bg-white/20 border-2 border-dashed border-white/40 rounded-2xl flex flex-col items-center justify-center active:scale-95 transition-all">
+                <span className="text-3xl">🐾</span>
+                <span className="font-game text-[9px] text-white/60 mt-1 uppercase">Comprar</span>
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Footer */}
+      {/* Footer Ajustado para Mobile */}
       {activeTab === 'crops' && (
-        <div className="z-20 bg-amber-50/90 backdrop-blur-2xl p-4 pb-8 border-t-4 border-amber-200 rounded-t-[3rem] shadow-2xl">
-          <div className="flex justify-around mb-4">
-            <button onClick={() => setSelectedTool(ToolType.SEED)} className={`p-3 rounded-2xl ${selectedTool === ToolType.SEED ? 'bg-amber-400 shadow-inner scale-110' : 'opacity-50'}`}>🌱</button>
-            <button onClick={() => setSelectedTool(ToolType.WATER)} className={`p-3 rounded-2xl ${selectedTool === ToolType.WATER ? 'bg-blue-400 shadow-inner scale-110' : 'opacity-50'}`}>💧</button>
+        <div className="absolute bottom-0 left-0 right-0 z-20 bg-amber-50/95 backdrop-blur-lg p-3 pb-6 border-t-2 border-amber-200 rounded-t-[2rem] shadow-[0_-10px_25px_rgba(0,0,0,0.1)]">
+          <div className="flex justify-around mb-3">
+            <button onClick={() => setSelectedTool(ToolType.SEED)} className={`p-2.5 rounded-xl transition-all ${selectedTool === ToolType.SEED ? 'bg-amber-400 shadow-inner scale-110' : 'bg-amber-200/50 opacity-60'}`}>🌱</button>
+            <button onClick={() => setSelectedTool(ToolType.WATER)} className={`p-2.5 rounded-xl transition-all ${selectedTool === ToolType.WATER ? 'bg-blue-400 shadow-inner scale-110' : 'bg-blue-200/50 opacity-60'}`}>💧</button>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide px-2">
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide px-1">
             {(Object.keys(CROPS) as CropType[]).map(type => (
-              <button key={type} onClick={() => { setSelectedSeed(type); setSelectedTool(ToolType.SEED); }} className={`min-w-[80px] p-2 rounded-2xl border-2 transition-all relative ${selectedSeed === type ? 'bg-white border-amber-500 shadow-lg' : 'bg-amber-100/50 border-transparent'}`}>
-                <div className="absolute -top-2 -left-1 bg-amber-600 text-white text-[8px] px-1.5 py-0.5 rounded-full font-game">x{gameState.seedInventory[type] || 0}</div>
-                <span className="text-2xl block">{CROPS[type].icon}</span>
-                <span className="text-[9px] font-bold uppercase">{CROPS[type].name}</span>
+              <button key={type} onClick={() => { setSelectedSeed(type); setSelectedTool(ToolType.SEED); }} className={`min-w-[70px] p-1.5 rounded-xl border-2 transition-all relative ${selectedSeed === type ? 'bg-white border-amber-500 shadow-md' : 'bg-amber-100/30 border-transparent'}`}>
+                <div className="absolute -top-1.5 -left-1 bg-amber-600 text-white text-[7px] px-1 py-0.5 rounded-full font-game shadow-sm">x{gameState.seedInventory[type] || 0}</div>
+                <span className="text-xl block">{CROPS[type].icon}</span>
+                <span className="text-[8px] font-bold uppercase block truncate">{CROPS[type].name}</span>
               </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* Store Modal */}
+      {/* Modal da Loja Otimizado */}
       {isStoreOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95">
-            <div className="bg-amber-500 p-4">
-              <div className="flex justify-between items-center text-white mb-4">
-                <h2 className="font-game text-xl tracking-wider uppercase">Mercado</h2>
-                <button onClick={() => setIsStoreOpen(false)} className="text-2xl">&times;</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white w-full max-w-sm rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-amber-500 p-4 shrink-0">
+              <div className="flex justify-between items-center text-white mb-3">
+                <h2 className="font-game text-lg tracking-wider uppercase">Mercado</h2>
+                <button onClick={() => setIsStoreOpen(false)} className="text-2xl font-bold leading-none">&times;</button>
               </div>
               <div className="flex bg-amber-600/40 p-1 rounded-xl">
-                <button onClick={() => setStoreTab('buy')} className={`flex-1 py-2 rounded-lg font-game text-[10px] ${storeTab === 'buy' ? 'bg-white text-amber-600 shadow' : 'text-white/70'}`}>SEMENTES</button>
-                <button onClick={() => setStoreTab('animals')} className={`flex-1 py-2 rounded-lg font-game text-[10px] ${storeTab === 'animals' ? 'bg-white text-amber-600 shadow' : 'text-white/70'}`}>ANIMAIS</button>
-                <button onClick={() => setStoreTab('sell')} className={`flex-1 py-2 rounded-lg font-game text-[10px] ${storeTab === 'sell' ? 'bg-white text-amber-600 shadow' : 'text-white/70'}`}>VENDER</button>
+                <button onClick={() => setStoreTab('buy')} className={`flex-1 py-2 rounded-lg font-game text-[9px] uppercase transition-all ${storeTab === 'buy' ? 'bg-white text-amber-600 shadow-sm' : 'text-white/70'}`}>Sementes</button>
+                <button onClick={() => setStoreTab('animals')} className={`flex-1 py-2 rounded-lg font-game text-[9px] uppercase transition-all ${storeTab === 'animals' ? 'bg-white text-amber-600 shadow-sm' : 'text-white/70'}`}>Animais</button>
+                <button onClick={() => setStoreTab('sell')} className={`flex-1 py-2 rounded-lg font-game text-[9px] uppercase transition-all ${storeTab === 'sell' ? 'bg-white text-amber-600 shadow-sm' : 'text-white/70'}`}>Vender</button>
               </div>
             </div>
             
-            <div className="p-4 space-y-2 max-h-[45vh] overflow-y-auto">
+            <div className="p-3 space-y-2 overflow-y-auto flex-1">
               {storeTab === 'buy' && (Object.keys(CROPS) as CropType[]).map(type => (
-                <div key={type} className="flex items-center justify-between p-3 bg-amber-50 rounded-2xl border border-amber-100">
+                <div key={type} className="flex items-center justify-between p-2.5 bg-amber-50 rounded-xl border border-amber-100">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{CROPS[type].icon}</span>
-                    <div className="font-bold text-xs">{CROPS[type].name} <span className="text-amber-600 text-[10px] block">${CROPS[type].cost}</span></div>
+                    <span className="text-xl">{CROPS[type].icon}</span>
+                    <div className="font-bold text-[11px]">{CROPS[type].name} <span className="text-amber-600 text-[9px] block font-game">${CROPS[type].cost}</span></div>
                   </div>
-                  <button onClick={() => { if(gameState.coins>=CROPS[type].cost) setGameState(prev=>({...prev, coins: prev.coins-CROPS[type].cost, seedInventory: {...prev.seedInventory, [type]: (prev.seedInventory[type] || 0)+1}})) }} className="bg-green-500 text-white px-3 py-1.5 rounded-xl font-game text-[10px]">COMPRAR</button>
+                  <button onClick={() => { if(gameState.coins>=CROPS[type].cost) setGameState(prev=>({...prev, coins: prev.coins-CROPS[type].cost, seedInventory: {...prev.seedInventory, [type]: (prev.seedInventory[type] || 0)+1}})) }} className="bg-green-500 text-white px-3 py-1 rounded-lg font-game text-[9px] shadow-sm">COMPRAR</button>
                 </div>
               ))}
 
               {storeTab === 'animals' && (Object.keys(ANIMALS) as AnimalType[]).map(type => (
-                <div key={type} className="flex items-center justify-between p-3 bg-orange-50 rounded-2xl border border-orange-100">
+                <div key={type} className="flex items-center justify-between p-2.5 bg-orange-50 rounded-xl border border-orange-100">
                   <div className="flex items-center gap-3">
-                    <span className="text-3xl">{ANIMALS[type].icon}</span>
-                    <div className="font-bold text-xs">{ANIMALS[type].name} <span className="text-orange-600 text-[10px] block">${ANIMALS[type].cost}</span></div>
+                    <span className="text-2xl">{ANIMALS[type].icon}</span>
+                    <div className="font-bold text-[11px]">{ANIMALS[type].name} <span className="text-orange-600 text-[9px] block font-game">${ANIMALS[type].cost}</span></div>
                   </div>
-                  <button onClick={() => buyAnimal(type)} className="bg-orange-500 text-white px-3 py-1.5 rounded-xl font-game text-[10px]">ADOTAR</button>
+                  <button onClick={() => buyAnimal(type)} className="bg-orange-500 text-white px-3 py-1 rounded-lg font-game text-[9px] shadow-sm">ADOTAR</button>
                 </div>
               ))}
 
@@ -316,20 +334,20 @@ const App: React.FC = () => {
                 const itemIcon = cropMatch?.icon || animalMatch?.produceIcon || '📦';
 
                 return (
-                  <div key={name} className="flex items-center justify-between p-3 bg-green-50 rounded-2xl border border-green-100">
+                  <div key={name} className="flex items-center justify-between p-2.5 bg-green-50 rounded-xl border border-green-100">
                     <div className="flex items-center gap-3">
-                      <span className="text-2xl">{itemIcon}</span>
-                      <div className="font-bold text-xs">{name} <span className="text-green-600 text-[10px] block">Valor: ${itemValue}</span></div>
+                      <span className="text-xl">{itemIcon}</span>
+                      <div className="font-bold text-[11px]">{name} <span className="text-green-600 text-[9px] block font-game">VALOR: ${itemValue}</span></div>
                     </div>
-                    <button onClick={() => setGameState(prev=>({...prev, coins: prev.coins+itemValue, inventory: {...prev.inventory, [name]: numericQty-1}}))} className="bg-green-600 text-white px-3 py-1.5 rounded-xl font-game text-[10px]">VENDER 1</button>
+                    <button onClick={() => setGameState(prev=>({...prev, coins: prev.coins+itemValue, inventory: {...prev.inventory, [name]: numericQty-1}}))} className="bg-green-600 text-white px-3 py-1 rounded-lg font-game text-[9px] shadow-sm">VENDER 1</button>
                   </div>
                 );
               })}
             </div>
 
-            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
-              <div className="font-game text-xl text-amber-600">💰 ${gameState.coins}</div>
-              <button onClick={() => setIsStoreOpen(false)} className="bg-amber-500 text-white font-game px-6 py-2 rounded-xl text-sm uppercase">Sair</button>
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center shrink-0">
+              <div className="font-game text-lg text-amber-600">💰 ${gameState.coins}</div>
+              <button onClick={() => setIsStoreOpen(false)} className="bg-amber-500 text-white font-game px-5 py-2 rounded-lg text-[11px] uppercase shadow-md">Sair</button>
             </div>
           </div>
         </div>
