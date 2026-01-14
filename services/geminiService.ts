@@ -1,10 +1,17 @@
 
 import { GoogleGenAI } from "@google/genai";
 
-// Initialize with a named parameter as per guidelines
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// Inicialização segura: se a chave não existir, o serviço falhará graciosamente
+const getAIClient = () => {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) return null;
+  return new GoogleGenAI({ apiKey });
+};
 
 export const getFarmAdvice = async (coins: number, level: number, inventory: any) => {
+  const ai = getAIClient();
+  if (!ai) return "O tempo está ótimo para colher!";
+
   try {
     const prompt = `Você é um mentor especialista em fazendas no jogo "Gemini Harvest". 
     O jogador está no nível ${level}, tem ${coins} moedas e o seguinte inventário: ${JSON.stringify(inventory)}.
@@ -15,10 +22,9 @@ export const getFarmAdvice = async (coins: number, level: number, inventory: any
       contents: prompt,
     });
     
-    // Accessing .text property directly (not a method) as per guidelines
     return response.text || "Continue plantando para crescer!";
   } catch (error) {
     console.error("Gemini advice error:", error);
-    return "O tempo está ótimo para colher!";
+    return "Mantenha o foco na sua produção!";
   }
 };

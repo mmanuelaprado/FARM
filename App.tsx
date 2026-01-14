@@ -16,17 +16,23 @@ interface FloatingText {
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'crops' | 'ranch'>('crops');
   const [gameState, setGameState] = useState<GameState>(() => {
-    const saved = localStorage.getItem('gemini_harvest_state');
-    const defaultSeeds = { [CropType.WHEAT]: 5, [CropType.CORN]: 0, [CropType.CARROT]: 0, [CropType.TOMATO]: 0, [CropType.PUMPKIN]: 0 };
-    
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return {
-        ...parsed,
-        seedInventory: parsed.seedInventory || defaultSeeds,
-        animals: parsed.animals || [],
-        inventory: parsed.inventory || {}
-      };
+    try {
+      const saved = localStorage.getItem('gemini_harvest_state');
+      const defaultSeeds = { [CropType.WHEAT]: 5, [CropType.CORN]: 0, [CropType.CARROT]: 0, [CropType.TOMATO]: 0, [CropType.PUMPKIN]: 0 };
+      
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          coins: Number(parsed.coins) || INITIAL_COINS,
+          xp: Number(parsed.xp) || 0,
+          level: Number(parsed.level) || 1,
+          inventory: parsed.inventory || {},
+          seedInventory: parsed.seedInventory || defaultSeeds,
+          animals: parsed.animals || []
+        };
+      }
+    } catch (e) {
+      console.error("Error loading state", e);
     }
 
     return {
@@ -34,21 +40,25 @@ const App: React.FC = () => {
       xp: 0,
       level: 1,
       inventory: {},
-      seedInventory: defaultSeeds,
+      seedInventory: { [CropType.WHEAT]: 5, [CropType.CORN]: 0, [CropType.CARROT]: 0, [CropType.TOMATO]: 0, [CropType.PUMPKIN]: 0 },
       animals: []
     };
   });
 
   const [plots, setPlots] = useState<Plot[]>(() => {
-    const saved = localStorage.getItem('gemini_harvest_plots');
-    return saved ? JSON.parse(saved) : Array.from({ length: INITIAL_PLOT_COUNT }, (_, i) => ({
+    try {
+      const saved = localStorage.getItem('gemini_harvest_plots');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    
+    return Array.from({ length: INITIAL_PLOT_COUNT }, (_, i) => ({
       id: i, crop: null, plantedAt: null, watered: false,
     }));
   });
 
   const [selectedTool, setSelectedTool] = useState<ToolType>(ToolType.SEED);
   const [selectedSeed, setSelectedSeed] = useState<CropType>(CropType.WHEAT);
-  const [advice, setAdvice] = useState<string>("Bem-vindo! Cultive ou crie animais para lucrar.");
+  const [advice, setAdvice] = useState<string>("Carregando sua fazenda...");
   const [isStoreOpen, setIsStoreOpen] = useState(false);
   const [storeTab, setStoreTab] = useState<'buy' | 'sell' | 'animals'>('buy');
   const [floatingTexts, setFloatingTexts] = useState<FloatingText[]>([]);
@@ -64,7 +74,6 @@ const App: React.FC = () => {
     localStorage.setItem('gemini_harvest_plots', JSON.stringify(plots));
   }, [gameState, plots]);
 
-  // Request advice from Gemini when level or coins change significantly
   useEffect(() => {
     const fetchAdvice = async () => {
       const text = await getFarmAdvice(gameState.coins, gameState.level, gameState.inventory);
@@ -74,7 +83,7 @@ const App: React.FC = () => {
   }, [gameState.level, isStoreOpen]);
 
   const addFloatingText = (x: number, y: number, text: string, color: string = "text-yellow-500") => {
-    const id = Date.now();
+    const id = Date.now() + Math.random();
     setFloatingTexts(prev => [...prev, { id, x, y, text, color }]);
     setTimeout(() => setFloatingTexts(prev => prev.filter(t => t.id !== id)), 1000);
   };
@@ -83,8 +92,11 @@ const App: React.FC = () => {
     const plot = plots.find(p => p.id === id);
     if (!plot) return;
     const cropData = plot.crop ? CROPS[plot.crop] : null;
+    if (!cropData && selectedTool === ToolType.WATER) return;
+
+    const now = Date.now();
     const effectiveGrowth = plot.watered ? (cropData?.growthTime || 0) / 2 : (cropData?.growthTime || 0);
-    const isReady = plot.plantedAt && (currentTime - plot.plantedAt) / 1000 >= effectiveGrowth;
+    const isReady = plot.plantedAt && (now - plot.plantedAt) / 1000 >= effectiveGrowth;
 
     if (plot.crop && isReady) {
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
@@ -111,12 +123,15 @@ const App: React.FC = () => {
   const water = (id: number) => setPlots(prev => prev.map(p => p.id === id ? { ...p, watered: true } : p));
 
   const harvest = (id: number, type: CropType) => {
-    setGameState(prev => ({
-      ...prev,
-      xp: prev.xp + 15,
-      level: Math.floor((prev.xp + 15) / XP_PER_LEVEL) + 1,
-      inventory: { ...prev.inventory, [type]: (Number(prev.inventory[type]) || 0) + 1 }
-    }));
+    setGameState(prev => {
+      const newXp = prev.xp + 15;
+      return {
+        ...prev,
+        xp: newXp,
+        level: Math.floor(newXp / XP_PER_LEVEL) + 1,
+        inventory: { ...prev.inventory, [type]: (Number(prev.inventory[type]) || 0) + 1 }
+      };
+    });
     setPlots(prev => prev.map(p => p.id === id ? { ...p, crop: null, plantedAt: null, watered: false } : p));
   };
 
@@ -126,7 +141,7 @@ const App: React.FC = () => {
       setGameState(prev => ({
         ...prev,
         coins: prev.coins - animal.cost,
-        animals: [...prev.animals, { id: Date.now(), type, lastProducedAt: Date.now() }]
+        animals: [...prev.animals, { id: Date.now() + Math.random(), type, lastProducedAt: Date.now() }]
       }));
       setAdvice(`Parabéns! Uma nova ${animal.name} chegou.`);
     }
@@ -155,7 +170,7 @@ const App: React.FC = () => {
   return (
     <div className="h-screen w-full flex flex-col bg-gradient-to-b from-sky-400 to-sky-200 overflow-hidden relative font-sans">
       {floatingTexts.map(t => (
-        <div key={t.id} className={`fixed z-[100] font-game text-xl pointer-events-none animate-bounce ${t.color}`} style={{ left: t.x, top: t.y, transform: 'translateX(-50%)' }}>{t.text}</div>
+        <div key={t.id} className="fixed z-[100] font-game text-xl pointer-events-none animate-bounce" style={{ left: t.x, top: t.y, transform: 'translateX(-50%)', color: 'orange' }}>{t.text}</div>
       ))}
 
       {/* Header */}
@@ -200,7 +215,7 @@ const App: React.FC = () => {
               ))}
               {plots.length < MAX_PLOT_COUNT && (
                 <button onClick={() => { if(gameState.coins >= PLOT_UNLOCK_COST) { setGameState(prev=>({...prev, coins: prev.coins-PLOT_UNLOCK_COST})); setPlots(prev=>[...prev, {id: prev.length, crop:null, plantedAt:null, watered:false}]); } }} className="w-full aspect-square rounded-2xl border-4 border-dashed border-white/40 flex flex-col items-center justify-center bg-white/10 active:scale-95 transition-all">
-                  <span className="text-xl text-white/60">➕ LOTE</span>
+                  <span className="text-xl text-white/60">➕</span>
                   <span className="text-[10px] font-game text-white/60">${PLOT_UNLOCK_COST}</span>
                 </button>
               )}
@@ -215,7 +230,7 @@ const App: React.FC = () => {
                 return (
                   <div key={animal.id} onClick={(e) => collectFromAnimal(animal.id, e)} className="bg-white/90 p-4 rounded-[2rem] shadow-xl border-4 border-orange-200 flex flex-col items-center relative active:scale-95 transition-transform cursor-pointer">
                     <span className={`text-6xl mb-2 ${isReady ? 'animate-bounce' : ''}`}>{data.icon}</span>
-                    <span className="font-game text-xs text-orange-800 uppercase">{data.name}</span>
+                    <span className="font-game text-xs text-orange-800 uppercase text-center">{data.name}</span>
                     <div className="w-full h-3 bg-orange-100 rounded-full mt-2 overflow-hidden border border-orange-200">
                        <div className={`h-full transition-all duration-300 ${isReady ? 'bg-yellow-400' : 'bg-orange-400'}`} style={{width: `${progress}%`}} />
                     </div>
@@ -229,14 +244,14 @@ const App: React.FC = () => {
               })}
               <button onClick={() => { setStoreTab('animals'); setIsStoreOpen(true); }} className="aspect-square bg-white/20 border-4 border-dashed border-white/40 rounded-[2rem] flex flex-col items-center justify-center active:scale-95 transition-all">
                 <span className="text-4xl">🐾</span>
-                <span className="font-game text-[10px] text-white/60 mt-2">COMPRAR ANIMAL</span>
+                <span className="font-game text-[10px] text-white/60 mt-2">LOJA</span>
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Footer (Crops Only) */}
+      {/* Footer */}
       {activeTab === 'crops' && (
         <div className="z-20 bg-amber-50/90 backdrop-blur-2xl p-4 pb-8 border-t-4 border-amber-200 rounded-t-[3rem] shadow-2xl">
           <div className="flex justify-around mb-4">
@@ -246,7 +261,7 @@ const App: React.FC = () => {
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide px-2">
             {(Object.keys(CROPS) as CropType[]).map(type => (
               <button key={type} onClick={() => { setSelectedSeed(type); setSelectedTool(ToolType.SEED); }} className={`min-w-[80px] p-2 rounded-2xl border-2 transition-all relative ${selectedSeed === type ? 'bg-white border-amber-500 shadow-lg' : 'bg-amber-100/50 border-transparent'}`}>
-                <div className="absolute -top-2 -left-1 bg-amber-600 text-white text-[8px] px-1.5 py-0.5 rounded-full font-game">x{gameState.seedInventory[type]}</div>
+                <div className="absolute -top-2 -left-1 bg-amber-600 text-white text-[8px] px-1.5 py-0.5 rounded-full font-game">x{gameState.seedInventory[type] || 0}</div>
                 <span className="text-2xl block">{CROPS[type].icon}</span>
                 <span className="text-[9px] font-bold uppercase">{CROPS[type].name}</span>
               </button>
@@ -261,7 +276,7 @@ const App: React.FC = () => {
           <div className="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95">
             <div className="bg-amber-500 p-4">
               <div className="flex justify-between items-center text-white mb-4">
-                <h2 className="font-game text-xl tracking-wider">MERCADO DA VILA</h2>
+                <h2 className="font-game text-xl tracking-wider uppercase">Mercado</h2>
                 <button onClick={() => setIsStoreOpen(false)} className="text-2xl">&times;</button>
               </div>
               <div className="flex bg-amber-600/40 p-1 rounded-xl">
@@ -278,7 +293,7 @@ const App: React.FC = () => {
                     <span className="text-2xl">{CROPS[type].icon}</span>
                     <div className="font-bold text-xs">{CROPS[type].name} <span className="text-amber-600 text-[10px] block">${CROPS[type].cost}</span></div>
                   </div>
-                  <button onClick={() => { if(gameState.coins>=CROPS[type].cost) setGameState(prev=>({...prev, coins: prev.coins-CROPS[type].cost, seedInventory: {...prev.seedInventory, [type]: prev.seedInventory[type]+1}})) }} className="bg-green-500 text-white px-3 py-1.5 rounded-xl font-game text-[10px]">COMPRAR</button>
+                  <button onClick={() => { if(gameState.coins>=CROPS[type].cost) setGameState(prev=>({...prev, coins: prev.coins-CROPS[type].cost, seedInventory: {...prev.seedInventory, [type]: (prev.seedInventory[type] || 0)+1}})) }} className="bg-green-500 text-white px-3 py-1.5 rounded-xl font-game text-[10px]">COMPRAR</button>
                 </div>
               ))}
 
@@ -293,18 +308,20 @@ const App: React.FC = () => {
               ))}
 
               {storeTab === 'sell' && Object.entries(gameState.inventory).map(([name, qty]) => {
-                const itemValue = Object.values(CROPS).find(c => c.type === name)?.value || Object.values(ANIMALS).find(a => a.produceName === name)?.produceValue || 0;
-                // Cast unknown quantity to number for comparison
                 const numericQty = Number(qty);
                 if (numericQty <= 0) return null;
+                const cropMatch = Object.values(CROPS).find(c => c.type === name);
+                const animalMatch = Object.values(ANIMALS).find(a => a.produceName === name);
+                const itemValue = cropMatch?.value || animalMatch?.produceValue || 0;
+                const itemIcon = cropMatch?.icon || animalMatch?.produceIcon || '📦';
+
                 return (
                   <div key={name} className="flex items-center justify-between p-3 bg-green-50 rounded-2xl border border-green-100">
                     <div className="flex items-center gap-3">
-                      <span className="text-2xl">{Object.values(CROPS).find(c => c.type === name)?.icon || Object.values(ANIMALS).find(a => a.produceName === name)?.produceIcon}</span>
+                      <span className="text-2xl">{itemIcon}</span>
                       <div className="font-bold text-xs">{name} <span className="text-green-600 text-[10px] block">Valor: ${itemValue}</span></div>
                     </div>
-                    {/* Explicitly cast qty to number for arithmetic */}
-                    <button onClick={() => setGameState(prev=>({...prev, coins: prev.coins+itemValue, inventory: {...prev.inventory, [name]: Number(qty)-1}}))} className="bg-green-600 text-white px-3 py-1.5 rounded-xl font-game text-[10px]">VENDER 1</button>
+                    <button onClick={() => setGameState(prev=>({...prev, coins: prev.coins+itemValue, inventory: {...prev.inventory, [name]: numericQty-1}}))} className="bg-green-600 text-white px-3 py-1.5 rounded-xl font-game text-[10px]">VENDER 1</button>
                   </div>
                 );
               })}
@@ -312,7 +329,7 @@ const App: React.FC = () => {
 
             <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
               <div className="font-game text-xl text-amber-600">💰 ${gameState.coins}</div>
-              <button onClick={() => setIsStoreOpen(false)} className="bg-amber-500 text-white font-game px-6 py-2 rounded-xl text-sm">SAIR</button>
+              <button onClick={() => setIsStoreOpen(false)} className="bg-amber-500 text-white font-game px-6 py-2 rounded-xl text-sm uppercase">Sair</button>
             </div>
           </div>
         </div>
