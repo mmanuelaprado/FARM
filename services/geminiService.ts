@@ -1,17 +1,18 @@
 
 import { GoogleGenAI } from "@google/genai";
 
-// No Vercel/Browser sem bundler, process.env pode não estar definido.
-// Usamos uma verificação segura para evitar o erro "process is not defined".
+/**
+ * Tenta obter a chave de API de forma segura sem quebrar o ambiente do navegador.
+ * No Vercel/ESM puro, process.env pode causar ReferenceError.
+ */
 const getSafeApiKey = (): string => {
   try {
-    // @ts-ignore
+    // Verifica se process existe no escopo global de forma segura
     if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
-      // @ts-ignore
       return process.env.API_KEY;
     }
   } catch (e) {
-    console.warn("Ambiente de process.env não disponível.");
+    // Silencia erros de referência
   }
   return "";
 };
@@ -20,7 +21,7 @@ export const getFarmAdvice = async (coins: number, level: number, inventory: any
   const apiKey = getSafeApiKey();
   
   if (!apiKey) {
-    return "O tempo está ótimo para colher hoje!";
+    return "O tempo está ótimo para colher hoje! Continue cuidando da sua fazenda.";
   }
 
   try {
@@ -37,6 +38,6 @@ export const getFarmAdvice = async (coins: number, level: number, inventory: any
     return response.text?.trim() || "Continue plantando para crescer!";
   } catch (error) {
     console.error("Gemini advice error:", error);
-    return "Mantenha o foco na sua produção!";
+    return "Mantenha o foco na sua produção e colha bons frutos!";
   }
 };
