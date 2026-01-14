@@ -1,7 +1,6 @@
 
 /**
- * DATABASE DE CONSELHOS LOCAIS (Substitui a IA)
- * Mantém o mesmo comportamento de prover dicas ao jogador de forma estática.
+ * DATABASE DE CONSELHOS LOCAIS - 100% OFFLINE
  */
 const FARM_ADVICE_DATABASE = [
   "O sol está radiante hoje! Perfeito para cuidar da terra.",
@@ -12,35 +11,27 @@ const FARM_ADVICE_DATABASE = [
   "Galinhas produzem ovos mais rápido se você estiver por perto!",
   "Economize moedas para expandir seu terreno clicando nos lotes bloqueados.",
   "O Trigo é ótimo para começar, mas o Milho dá mais lucro.",
-  "A terra está úmida e fértil hoje, aproveite!",
   "Já pensou em adotar uma vaca? O leite vale muito no mercado.",
-  "A organização dos canteiros facilita a colheita rápida.",
   "Nível 5 desbloqueia sementes muito mais valiosas!",
-  "Mantenha sempre sementes no estoque para não perder tempo.",
   "Vender produtos animais é a forma mais rápida de ficar rico.",
   "Cada colheita te deixa mais perto de ser um mestre fazendeiro."
 ];
 
 /**
- * Retorna um conselho da base local com base no contexto do jogador.
- * Esta função mantém o nome original para não quebrar a lógica do App.tsx,
- * mas remove toda e qualquer chamada para modelos de linguagem ou APIs externas.
+ * Retorna um conselho local baseado no progresso real do jogador.
+ * Substitui o modelo de IA por lógica de programação clássica.
  */
 export const getFarmAdvice = async (coins: number, level: number, inventory: any): Promise<string> => {
-  // Lógica contextual simples para substituir o "raciocínio" da IA
+  // Lógica contextual estática
   if (level === 1 && coins < 10) {
-    return "Dica: Plante Trigo para começar a girar sua economia!";
+    return "Dica inicial: Comece plantando Trigo para ganhar suas primeiras moedas!";
   }
-
+  
   if (level >= 10 && (!inventory || !inventory["Fruta Dragão"])) {
-    return "Incrível! Você já pode plantar Fruta Dragão, o item mais valioso!";
+    return "Status de Mestre: Você já pode cultivar a lendária Fruta Dragão!";
   }
 
-  if (coins > 1000 && level < 5) {
-    return "Você tem muitas moedas! Que tal focar em XP para subir de nível?";
-  }
-
-  // Seleção aleatória para dicas gerais
+  // Fallback aleatório seguro
   const randomIndex = Math.floor(Math.random() * FARM_ADVICE_DATABASE.length);
   return FARM_ADVICE_DATABASE[randomIndex];
 };

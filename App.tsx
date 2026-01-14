@@ -38,9 +38,7 @@ const App: React.FC = () => {
           animals: Array.isArray(parsed.animals) ? parsed.animals : []
         };
       }
-    } catch (e) {
-      console.error("Erro ao carregar estado inicial:", e);
-    }
+    } catch (e) {}
     return { coins: INITIAL_COINS, xp: 0, level: 1, inventory: {}, seedInventory: defaultSeeds, animals: [] };
   });
 
@@ -87,12 +85,13 @@ const App: React.FC = () => {
 
     if (isLoaded) {
       fetchAdvice();
-      adviceIntervalRef.current = setInterval(fetchAdvice, 600000);
+      adviceIntervalRef.current = setInterval(fetchAdvice, 300000); // 5 min
     }
     return () => clearInterval(adviceIntervalRef.current);
   }, [gameState.level, isLoaded]);
 
-  if (!isLoaded) return <div className="fixed inset-0 bg-sky-400 flex items-center justify-center text-white font-game text-2xl">Preparando Solo...</div>;
+  // Renderiza uma tela de loading caso não esteja pronto
+  if (!isLoaded) return <div className="bg-sky-400 h-screen w-screen flex items-center justify-center font-game text-white">Carregando...</div>;
 
   const handleUnlockPlot = (id: number, e: React.MouseEvent) => {
     if (gameState.coins >= PLOT_UNLOCK_COST) {
@@ -105,7 +104,7 @@ const App: React.FC = () => {
       setPlots(prev => prev.map(p => p.id === id ? { ...p, unlocked: true } : p));
     } else {
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-      addFloatingText(rect.left + rect.width / 2, rect.top, "Moedas insuficientes!", "❌");
+      addFloatingText(rect.left + rect.width / 2, rect.top, "Sem moedas!", "❌");
     }
   };
 
@@ -248,9 +247,6 @@ const App: React.FC = () => {
           {activeTab === 'crops' ? (
             <div className="relative p-4 rounded-[3.5rem] shadow-[0_30px_60px_-12px_rgba(0,0,0,0.6),_inset_0_4px_12px_rgba(255,255,255,0.4)] border-4 border-green-900/20 overflow-hidden bg-[#15803d]">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,_#4ade80_0%,_#166534_100%)] opacity-95" />
-              <div className="absolute inset-0 opacity-40 mix-blend-overlay pointer-events-none" 
-                   style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/natural-paper.png")' }} />
-              
               <div className="grid grid-cols-3 gap-3 relative z-10">
                 {plots.map(plot => (
                   <PlotCard 
