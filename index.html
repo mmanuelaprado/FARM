@@ -20,19 +20,19 @@
             width: 100vw;
         }
         .font-game { font-family: 'Fredoka One', cursive; }
-        .pixel-corners {
-            clip-path: polygon(
-                0 4px, 4px 4px, 4px 0,
-                calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px,
-                100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%,
-                4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px)
-            );
-        }
+        
         @keyframes sway {
-            0%, 100% { transform: rotate(-2deg); }
-            50% { transform: rotate(2deg); }
+            0%, 100% { transform: rotate(-3deg) translateY(0); }
+            50% { transform: rotate(3deg) translateY(-2px); }
         }
         .sway { animation: sway 3s ease-in-out infinite; }
+        
+        @keyframes bounce-custom {
+            0% { transform: translateY(-20px) scaleY(1.2); opacity: 0; }
+            60% { transform: translateY(0) scaleY(0.8); opacity: 1; }
+            80% { transform: translateY(-5px) scaleY(1.1); }
+            100% { transform: translateY(0) scaleY(1); }
+        }
         
         /* Previne tela branca se o JS demorar ou falhar */
         #root:empty {

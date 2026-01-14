@@ -4,7 +4,8 @@ export enum CropType {
   CORN = 'CORN',
   CARROT = 'CARROT',
   TOMATO = 'TOMATO',
-  PUMPKIN = 'PUMPKIN'
+  PUMPKIN = 'PUMPKIN',
+  DRAGON_FRUIT = 'DRAGON_FRUIT'
 }
 
 export enum AnimalType {
@@ -25,6 +26,7 @@ export interface CropData {
   cost: number;
   icon: string;
   color: string;
+  minLevel?: number;
 }
 
 export interface AnimalData {
