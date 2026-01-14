@@ -50,7 +50,7 @@ export const CROPS: Record<CropType, CropData> = {
   [CropType.DRAGON_FRUIT]: {
     type: CropType.DRAGON_FRUIT,
     name: 'Fruta Dragão',
-    growthTime: 300, // 5 minutos
+    growthTime: 300,
     value: 2500,
     cost: 200,
     icon: '🐲',

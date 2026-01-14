@@ -1,61 +1,46 @@
 
-import { GoogleGenAI } from "@google/genai";
-
-const FALLBACK_ADVICE = [
+/**
+ * DATABASE DE CONSELHOS LOCAIS (Substitui a IA)
+ * Mantém o mesmo comportamento de prover dicas ao jogador de forma estática.
+ */
+const FARM_ADVICE_DATABASE = [
   "O sol está radiante hoje! Perfeito para cuidar da terra.",
-  "Lembre-se de regar suas plantas para colher mais rápido!",
+  "Lembre-se de regar suas plantas para colher 2x mais rápido!",
   "A Fruta do Dragão é o tesouro dos fazendeiros de nível 10.",
   "Diversificar sua colheita é o segredo para um bolso cheio.",
   "Sua fazenda é o lugar mais bonito da região hoje!",
   "Galinhas produzem ovos mais rápido se você estiver por perto!",
-  "Economize moedas para expandir seu terreno em breve."
+  "Economize moedas para expandir seu terreno clicando nos lotes bloqueados.",
+  "O Trigo é ótimo para começar, mas o Milho dá mais lucro.",
+  "A terra está úmida e fértil hoje, aproveite!",
+  "Já pensou em adotar uma vaca? O leite vale muito no mercado.",
+  "A organização dos canteiros facilita a colheita rápida.",
+  "Nível 5 desbloqueia sementes muito mais valiosas!",
+  "Mantenha sempre sementes no estoque para não perder tempo.",
+  "Vender produtos animais é a forma mais rápida de ficar rico.",
+  "Cada colheita te deixa mais perto de ser um mestre fazendeiro."
 ];
 
-let lastCallTime = 0;
-const THROTTLE_MS = 300000; // 5 minutos de intervalo para chamadas à API
-
-export const getFarmAdvice = async (coins: number, level: number, inventory: any) => {
-  const now = Date.now();
-  
-  // Tenta recuperar do cache se a última chamada foi recente
-  const cachedAdvice = localStorage.getItem('gemini_advice_cache');
-  const cachedTime = Number(localStorage.getItem('gemini_advice_time') || 0);
-
-  if (now - cachedTime < THROTTLE_MS && cachedAdvice) {
-    return cachedAdvice;
+/**
+ * Retorna um conselho da base local com base no contexto do jogador.
+ * Esta função mantém o nome original para não quebrar a lógica do App.tsx,
+ * mas remove toda e qualquer chamada para modelos de linguagem ou APIs externas.
+ */
+export const getFarmAdvice = async (coins: number, level: number, inventory: any): Promise<string> => {
+  // Lógica contextual simples para substituir o "raciocínio" da IA
+  if (level === 1 && coins < 10) {
+    return "Dica: Plante Trigo para começar a girar sua economia!";
   }
 
-  const apiKey = (import.meta as any).env?.API_KEY || (process as any).env?.API_KEY || "";
-  
-  // Se não houver chave ou for muito cedo para chamar a API novamente, usa fallback
-  if (!apiKey || (now - lastCallTime < THROTTLE_MS)) {
-    const randomFallback = FALLBACK_ADVICE[Math.floor(Math.random() * FALLBACK_ADVICE.length)];
-    return randomFallback;
+  if (level >= 10 && (!inventory || !inventory["Fruta Dragão"])) {
+    return "Incrível! Você já pode plantar Fruta Dragão, o item mais valioso!";
   }
 
-  try {
-    lastCallTime = now;
-    const ai = new GoogleGenAI({ apiKey });
-    const prompt = `Você é um mentor especialista em fazendas. 
-    Status: Nível ${level}, Moedas ${coins}.
-    Inventário: ${JSON.stringify(inventory)}.
-    Dê uma dica curta e motivadora (máximo 10 palavras).`;
-    
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: prompt,
-    });
-    
-    const adviceText = response.text?.trim() || FALLBACK_ADVICE[0];
-    
-    // Salva no cache
-    localStorage.setItem('gemini_advice_cache', adviceText);
-    localStorage.setItem('gemini_advice_time', now.toString());
-    
-    return adviceText;
-  } catch (error: any) {
-    console.warn("Gemini API Error (Quota/Network):", error?.message || "Erro desconhecido");
-    // Retorna dica aleatória em caso de erro 429 ou outros
-    return FALLBACK_ADVICE[Math.floor(Math.random() * FALLBACK_ADVICE.length)];
+  if (coins > 1000 && level < 5) {
+    return "Você tem muitas moedas! Que tal focar em XP para subir de nível?";
   }
+
+  // Seleção aleatória para dicas gerais
+  const randomIndex = Math.floor(Math.random() * FARM_ADVICE_DATABASE.length);
+  return FARM_ADVICE_DATABASE[randomIndex];
 };

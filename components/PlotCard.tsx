@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Plot, CropType, ToolType } from '../types';
-import { CROPS } from '../constants';
+import { CROPS, PLOT_UNLOCK_COST } from '../constants';
 
 interface PlotCardProps {
   plot: Plot;
@@ -43,6 +43,23 @@ const PlotCard: React.FC<PlotCardProps> = ({ plot, selectedTool, selectedSeed, o
 
   const isReady = progress >= 100;
 
+  if (!plot.unlocked) {
+    return (
+      <div 
+        onClick={(e) => onAction(plot.id, e)}
+        className="relative w-full aspect-square rounded-[1.8rem] cursor-pointer transition-all duration-300 transform active:scale-95
+          bg-[#3d2b1f] border-4 border-dashed border-white/20
+          flex flex-col items-center justify-center overflow-hidden group shadow-lg"
+      >
+        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors" />
+        <span className="text-2xl mb-1 grayscale z-10">🔒</span>
+        <span className="font-game text-[10px] text-white/80 z-10">${PLOT_UNLOCK_COST}</span>
+        <div className="absolute inset-0 opacity-10 pointer-events-none" 
+             style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/dark-matter.png")' }} />
+      </div>
+    );
+  }
+
   const getGrowthScale = () => {
     if (!plot.crop) return 'scale-0';
     if (isReady) return 'scale-125 sway';
@@ -62,11 +79,9 @@ const PlotCard: React.FC<PlotCardProps> = ({ plot, selectedTool, selectedSeed, o
         flex items-center justify-center overflow-hidden group 
         shadow-[0_8px_0_rgba(0,0,0,0.2),_inset_0_-4px_10px_rgba(0,0,0,0.6),_0_0_20px_rgba(0,0,0,0.1)]`}
     >
-      {/* Detalhes de Textura de Terra */}
       <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay" 
            style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/dark-matter.png")' }} />
       
-      {/* Brilho de Água */}
       <div className={`absolute inset-0 bg-blue-400/25 transition-opacity duration-1000 ${plot.watered ? 'opacity-100' : 'opacity-0'}`} />
 
       {!plot.crop ? (

@@ -5,7 +5,6 @@ import { CROPS, ANIMALS, INITIAL_COINS, INITIAL_PLOT_COUNT, XP_PER_LEVEL, PLOT_U
 import PlotCard from './components/PlotCard';
 import { getFarmAdvice } from './services/geminiService';
 import { audioService } from './services/audioService';
-import { notificationService } from './services/notificationService';
 
 interface FloatingText {
   id: number;
@@ -19,7 +18,6 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'crops' | 'ranch'>('crops');
   const [isLoaded, setIsLoaded] = useState(false);
   const [coinAnimating, setCoinAnimating] = useState(false);
-  
   const adviceIntervalRef = useRef<any>(null);
 
   const [gameState, setGameState] = useState<GameState>(() => {
@@ -32,16 +30,16 @@ const App: React.FC = () => {
       if (saved) {
         const parsed = JSON.parse(saved);
         return {
-          coins: isNaN(Number(parsed.coins)) ? INITIAL_COINS : Number(parsed.coins),
-          xp: isNaN(Number(parsed.xp)) ? 0 : Number(parsed.xp),
-          level: isNaN(Number(parsed.level)) ? 1 : Number(parsed.level),
+          coins: Number(parsed.coins) ?? INITIAL_COINS,
+          xp: Number(parsed.xp) || 0,
+          level: Number(parsed.level) || 1,
           inventory: parsed.inventory || {},
           seedInventory: { ...defaultSeeds, ...parsed.seedInventory },
           animals: Array.isArray(parsed.animals) ? parsed.animals : []
         };
       }
     } catch (e) {
-      console.warn("Erro ao carregar estado salvo:", e);
+      console.error("Erro ao carregar estado inicial:", e);
     }
     return { coins: INITIAL_COINS, xp: 0, level: 1, inventory: {}, seedInventory: defaultSeeds, animals: [] };
   });
@@ -50,11 +48,13 @@ const App: React.FC = () => {
     try {
       const saved = localStorage.getItem('gemini_harvest_plots');
       if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.warn("Erro ao carregar canteiros salvos:", e);
-    }
-    return Array.from({ length: INITIAL_PLOT_COUNT }, (_, i) => ({
-      id: i, crop: null, plantedAt: null, watered: false,
+    } catch (e) {}
+    return Array.from({ length: MAX_PLOT_COUNT }, (_, i) => ({
+      id: i, 
+      crop: null, 
+      plantedAt: null, 
+      watered: false,
+      unlocked: i < INITIAL_PLOT_COUNT
     }));
   });
 
@@ -67,18 +67,18 @@ const App: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(Date.now());
 
   useEffect(() => {
-    setIsLoaded(true);
     const timer = setInterval(() => setCurrentTime(Date.now()), 1000);
+    setIsLoaded(true);
     return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
-    if (!isLoaded) return;
-    localStorage.setItem('gemini_harvest_state', JSON.stringify(gameState));
-    localStorage.setItem('gemini_harvest_plots', JSON.stringify(plots));
+    if (isLoaded) {
+      localStorage.setItem('gemini_harvest_state', JSON.stringify(gameState));
+      localStorage.setItem('gemini_harvest_plots', JSON.stringify(plots));
+    }
   }, [gameState, plots, isLoaded]);
 
-  // Atualiza conselho de forma mais espaçada para poupar API
   useEffect(() => {
     const fetchAdvice = async () => {
       const text = await getFarmAdvice(gameState.coins, gameState.level, gameState.inventory);
@@ -87,14 +87,27 @@ const App: React.FC = () => {
 
     if (isLoaded) {
       fetchAdvice();
-      if (adviceIntervalRef.current) clearInterval(adviceIntervalRef.current);
-      // Busca nova dica apenas a cada 10 minutos para ser conservador
       adviceIntervalRef.current = setInterval(fetchAdvice, 600000);
     }
     return () => clearInterval(adviceIntervalRef.current);
   }, [gameState.level, isLoaded]);
 
-  if (!isLoaded) return null;
+  if (!isLoaded) return <div className="fixed inset-0 bg-sky-400 flex items-center justify-center text-white font-game text-2xl">Preparando Solo...</div>;
+
+  const handleUnlockPlot = (id: number, e: React.MouseEvent) => {
+    if (gameState.coins >= PLOT_UNLOCK_COST) {
+      audioService.playCash();
+      triggerCoinAnimation();
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      addFloatingText(rect.left + rect.width / 2, rect.top, `-$${PLOT_UNLOCK_COST}`, "🏗️");
+      
+      setGameState(prev => ({ ...prev, coins: prev.coins - PLOT_UNLOCK_COST }));
+      setPlots(prev => prev.map(p => p.id === id ? { ...p, unlocked: true } : p));
+    } else {
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      addFloatingText(rect.left + rect.width / 2, rect.top, "Moedas insuficientes!", "❌");
+    }
+  };
 
   const triggerCoinAnimation = () => {
     setCoinAnimating(true);
@@ -110,6 +123,12 @@ const App: React.FC = () => {
   const handlePlotAction = (id: number, e: React.MouseEvent) => {
     const plot = plots.find(p => p.id === id);
     if (!plot) return;
+
+    if (!plot.unlocked) {
+      handleUnlockPlot(id, e);
+      return;
+    }
+
     const cropData = plot.crop ? CROPS[plot.crop] : null;
     const now = Date.now();
     const effectiveGrowth = plot.watered ? (cropData?.growthTime || 0) / 2 : (cropData?.growthTime || 0);
@@ -195,7 +214,6 @@ const App: React.FC = () => {
 
   return (
     <div className="fixed inset-0 flex flex-col bg-gradient-to-b from-sky-400 to-sky-200 overflow-hidden text-slate-800 touch-none select-none h-[100dvh]">
-      {/* HUD Superior */}
       <div className="z-10 px-4 pt-6 flex justify-between items-center shrink-0">
         <div className="flex flex-col gap-1">
           <div className={`bg-white/90 backdrop-blur px-3 py-1 rounded-xl shadow-lg flex items-center gap-2 border-2 border-amber-500 transition-transform duration-300 ${coinAnimating ? 'scale-110' : ''}`}>
@@ -228,19 +246,20 @@ const App: React.FC = () => {
       <div className="z-10 flex-1 overflow-y-auto px-4 py-4 scrollbar-hide pb-48">
         <div className="max-w-md mx-auto">
           {activeTab === 'crops' ? (
-            <div className="relative p-6 rounded-[3.5rem] shadow-[0_30px_60px_-12px_rgba(0,0,0,0.6),_inset_0_4px_12px_rgba(255,255,255,0.4)] border-4 border-green-900/20 overflow-hidden bg-[#15803d]">
+            <div className="relative p-4 rounded-[3.5rem] shadow-[0_30px_60px_-12px_rgba(0,0,0,0.6),_inset_0_4px_12px_rgba(255,255,255,0.4)] border-4 border-green-900/20 overflow-hidden bg-[#15803d]">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,_#4ade80_0%,_#166534_100%)] opacity-95" />
               <div className="absolute inset-0 opacity-40 mix-blend-overlay pointer-events-none" 
                    style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/natural-paper.png")' }} />
-              <div className="absolute inset-0 opacity-30 pointer-events-none"
-                   style={{ 
-                     boxShadow: 'inset 0 0 120px rgba(0,0,0,0.4)',
-                     background: 'radial-gradient(circle at 50% 50%, transparent 40%, rgba(6,78,59,0.4) 100%)'
-                   }} />
               
-              <div className="grid grid-cols-3 gap-4 relative z-10">
+              <div className="grid grid-cols-3 gap-3 relative z-10">
                 {plots.map(plot => (
-                  <PlotCard key={plot.id} plot={plot} selectedTool={selectedTool} selectedSeed={selectedSeed} onAction={(id, e) => handlePlotAction(id, e)} />
+                  <PlotCard 
+                    key={plot.id} 
+                    plot={plot} 
+                    selectedTool={selectedTool} 
+                    selectedSeed={selectedSeed} 
+                    onAction={(id, e) => handlePlotAction(id, e)} 
+                  />
                 ))}
               </div>
             </div>

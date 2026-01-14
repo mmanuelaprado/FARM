@@ -45,6 +45,7 @@ export interface Plot {
   crop: CropType | null;
   plantedAt: number | null;
   watered: boolean;
+  unlocked: boolean;
 }
 
 export interface AnimalSlot {
