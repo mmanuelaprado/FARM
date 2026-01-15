@@ -18,9 +18,9 @@ export const CROPS: Record<CropType, CropData> = {
 };
 
 export const ANIMALS: Record<AnimalType, AnimalData> = {
-  [AnimalType.CHICKEN]: { type: AnimalType.CHICKEN, name: 'Galinha', produceName: 'Ovo', produceIcon: '🥚', produceTime: 20, produceValue: 80, cost: 100, icon: '🐔' },
-  [AnimalType.COW]: { type: AnimalType.COW, name: 'Vaca', produceName: 'Leite', produceIcon: '🥛', produceTime: 45, produceValue: 250, cost: 250, icon: '🐄' },
-  [AnimalType.BEE]: { type: AnimalType.BEE, name: 'Abelha', produceName: 'Mel', produceIcon: '🍯', produceTime: 15, produceValue: 120, cost: 400, icon: '🐝' }
+  [AnimalType.CHICKEN]: { type: AnimalType.CHICKEN, name: 'Galinha', produceName: 'Ovo', produceIcon: '🥚', produceTime: 60, produceValue: 120, cost: 150, icon: '🐔' },
+  [AnimalType.BEE]: { type: AnimalType.BEE, name: 'Abelha', produceName: 'Mel', produceIcon: '🍯', produceTime: 90, produceValue: 200, cost: 450, icon: '🐝' },
+  [AnimalType.COW]: { type: AnimalType.COW, name: 'Vaca', produceName: 'Leite', produceIcon: '🥛', produceTime: 150, produceValue: 450, cost: 800, icon: '🐄' }
 };
 
 export const MATERIALS: Record<MaterialType, MaterialData> = {
