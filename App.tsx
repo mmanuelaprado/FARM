@@ -145,12 +145,10 @@ const App: React.FC = () => {
 
   if (!isLoaded) return null;
 
-  // TELA INICIAL
   if (!gameStarted) {
     return (
       <div className="fixed inset-0 z-[500] bg-gradient-to-b from-green-400 via-green-500 to-emerald-600 overflow-y-auto overflow-x-hidden p-6 text-white font-game flex flex-col items-center">
         <div className="max-w-2xl w-full flex flex-col items-center">
-          
           <div className="text-center mt-12 animate-bounce-slow">
             <span className="text-8xl block mb-4 drop-shadow-xl">🌾</span>
             <h1 className="text-5xl md:text-7xl uppercase tracking-tighter drop-shadow-2xl">Harvest Farm</h1>
@@ -210,34 +208,8 @@ const App: React.FC = () => {
             </div>
           </section>
 
-          <section className="mt-8 w-full bg-blue-600/30 p-8 rounded-[3rem] border-2 border-blue-400 shadow-2xl">
-            <h2 className="text-3xl mb-4">⚙️ Como funciona a produção</h2>
-            <p className="font-sans font-bold leading-relaxed">
-              Cada planta tem um tempo de maturação natural. Ao regar, você reduz esse tempo pela metade 
-              imediatamente. Os animais do rancho (Galinhas, Abelhas e Vacas) produzem recursos de forma 
-              automática a cada intervalo fixo. Basta clicar neles quando o ícone de recurso aparecer para coletar!
-            </p>
-          </section>
-
-          <section className="mt-8 w-full mb-20 text-center">
-            <h2 className="text-3xl mb-6">📸 Galeria da Fazenda</h2>
-            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide px-2">
-              <div className="min-w-[300px] h-48 bg-emerald-700 rounded-3xl flex items-center justify-center border-4 border-white shadow-2xl relative group overflow-hidden">
-                 <div className="absolute inset-0 bg-green-500/20 group-hover:bg-transparent transition-all"></div>
-                 <span className="text-8xl">🌻</span>
-                 <p className="absolute bottom-4 font-game text-white text-lg">Horta em Ação</p>
-              </div>
-              <div className="min-w-[300px] h-48 bg-orange-600 rounded-3xl flex items-center justify-center border-4 border-white shadow-2xl relative group overflow-hidden">
-                 <div className="absolute inset-0 bg-orange-500/20 group-hover:bg-transparent transition-all"></div>
-                 <span className="text-8xl">🐮</span>
-                 <p className="absolute bottom-4 font-game text-white text-lg">Rancho Feliz</p>
-              </div>
-              <div className="min-w-[300px] h-48 bg-indigo-800 rounded-3xl flex items-center justify-center border-4 border-white shadow-2xl relative group overflow-hidden">
-                 <div className="absolute inset-0 bg-indigo-500/20 group-hover:bg-transparent transition-all"></div>
-                 <span className="text-8xl">🏛️</span>
-                 <p className="absolute bottom-4 font-game text-white text-lg">Mansão Rural</p>
-              </div>
-            </div>
+          <section className="mt-8 w-full bg-blue-600/30 p-8 rounded-[3rem] border-2 border-blue-400 shadow-2xl text-center">
+             <p className="text-xs text-blue-100/50 uppercase font-game">Publicidade Autorizada por ads.txt</p>
           </section>
 
           <p className="text-white/40 mb-12 font-sans text-sm">© 2024 Harvest Farm Team</p>
@@ -254,8 +226,6 @@ const App: React.FC = () => {
 
   return (
     <div className="fixed inset-0 flex flex-col bg-gradient-to-b from-sky-400 to-sky-200 overflow-hidden text-slate-800 touch-none select-none h-[100dvh] pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] animate-in fade-in duration-500">
-      
-      {/* HEADER STATS */}
       <div className="z-10 px-4 pt-4 flex justify-between items-start shrink-0">
         <div className="flex flex-col gap-2">
           <div className="bg-white/95 backdrop-blur px-3 py-1.5 rounded-2xl shadow-lg flex items-center gap-2 border-2 border-amber-500">
@@ -283,7 +253,6 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* MAIN VIEWPORT */}
       <div className="z-10 flex-1 flex items-center justify-center px-4 py-2 min-h-0 overflow-hidden">
         <div className="w-full max-w-md max-h-full">
           {activeTab === 'crops' ? (
@@ -507,7 +476,6 @@ const App: React.FC = () => {
           50% { transform: translateY(-10px); }
         }
         .animate-bounce-slow { animation: bounce-slow 2s infinite ease-in-out; }
-        
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
