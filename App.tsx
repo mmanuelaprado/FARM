@@ -151,7 +151,6 @@ const App: React.FC = () => {
       <div className="fixed inset-0 z-[500] bg-gradient-to-b from-green-400 via-green-500 to-emerald-600 overflow-y-auto overflow-x-hidden p-6 text-white font-game flex flex-col items-center">
         <div className="max-w-2xl w-full flex flex-col items-center">
           
-          {/* NOME DO JOGO */}
           <div className="text-center mt-12 animate-bounce-slow">
             <span className="text-8xl block mb-4 drop-shadow-xl">🌾</span>
             <h1 className="text-5xl md:text-7xl uppercase tracking-tighter drop-shadow-2xl">Harvest Farm</h1>
@@ -165,7 +164,6 @@ const App: React.FC = () => {
             JOGAR AGORA
           </button>
 
-          {/* HISTÓRIA DO JOGO */}
           <section className="mt-20 w-full bg-white/20 backdrop-blur-md p-8 rounded-[3rem] border-2 border-white/30 shadow-2xl">
             <h2 className="text-3xl mb-4 flex items-center gap-3">📜 História</h2>
             <p className="text-lg leading-relaxed font-sans font-semibold">
@@ -175,7 +173,6 @@ const App: React.FC = () => {
             </p>
           </section>
 
-          {/* LISTA DOS ANIMAIS */}
           <section className="mt-8 w-full">
             <h2 className="text-3xl mb-6 text-center">🐾 Nossos Animais</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -191,7 +188,6 @@ const App: React.FC = () => {
             </div>
           </section>
 
-          {/* COMO JOGAR */}
           <section className="mt-8 w-full bg-amber-500/40 p-8 rounded-[3rem] border-2 border-amber-300 shadow-2xl">
             <h2 className="text-3xl mb-6 text-center">📖 Como Jogar</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-sans font-bold">
@@ -214,7 +210,6 @@ const App: React.FC = () => {
             </div>
           </section>
 
-          {/* COMO FUNCIONA A PRODUÇÃO */}
           <section className="mt-8 w-full bg-blue-600/30 p-8 rounded-[3rem] border-2 border-blue-400 shadow-2xl">
             <h2 className="text-3xl mb-4">⚙️ Como funciona a produção</h2>
             <p className="font-sans font-bold leading-relaxed">
@@ -224,7 +219,6 @@ const App: React.FC = () => {
             </p>
           </section>
 
-          {/* FOTOS DO JOGO */}
           <section className="mt-8 w-full mb-20 text-center">
             <h2 className="text-3xl mb-6">📸 Galeria da Fazenda</h2>
             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide px-2">
@@ -387,7 +381,6 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* FOOTER ACTION BAR */}
       {activeTab === 'crops' && (
         <div className="z-20 bg-amber-50/95 p-3 border-t-2 border-amber-200 rounded-t-[2.5rem] shrink-0">
           <div className="flex justify-center gap-6 mb-3">
@@ -408,7 +401,6 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* STORE MODAL */}
       {isStoreOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in">
           <div className="bg-amber-50 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border-4 border-white/20">
@@ -494,7 +486,6 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* FLOATING TEXT OVERLAY */}
       <div className="fixed inset-0 pointer-events-none z-[200]">
         {floatingTexts.map(t => (
           <div key={t.id} className="absolute flex flex-col items-center animate-float-up" style={{ left: t.x, top: t.y }}>
