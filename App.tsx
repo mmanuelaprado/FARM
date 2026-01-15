@@ -209,17 +209,11 @@ const App: React.FC = () => {
           </section>
 
           <section className="mt-8 w-full bg-blue-600/30 p-8 rounded-[3rem] border-2 border-blue-400 shadow-2xl text-center">
-             <p className="text-xs text-blue-100/50 uppercase font-game">Publicidade Autorizada por ads.txt</p>
+             <p className="text-xs text-blue-100/50 uppercase font-game">Apoiado por AdSense Ads</p>
           </section>
 
-          <p className="text-white/40 mb-12 font-sans text-sm">© 2024 Harvest Farm Team</p>
+          <p className="text-white/40 mt-12 mb-12 font-sans text-sm">© 2024 Harvest Farm Team</p>
         </div>
-        <style>{`
-          .animate-bounce-slow { animation: bounce-slow 3s infinite ease-in-out; }
-          @keyframes bounce-slow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
-          .scrollbar-hide::-webkit-scrollbar { display: none; }
-          .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        `}</style>
       </div>
     );
   }
