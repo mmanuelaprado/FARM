@@ -15,10 +15,32 @@ export enum CropType {
   GIANT_WATERMELON = 'GIANT_WATERMELON'
 }
 
+export interface CropData {
+  type: CropType;
+  name: string;
+  growthTime: number;
+  value: number;
+  cost: number;
+  icon: string;
+  color: string;
+  minLevel?: number;
+}
+
 export enum AnimalType {
   CHICKEN = 'CHICKEN',
   COW = 'COW',
   BEE = 'BEE'
+}
+
+export interface AnimalData {
+  type: AnimalType;
+  name: string;
+  produceName: string;
+  produceIcon: string;
+  produceTime: number;
+  produceValue: number;
+  cost: number;
+  icon: string;
 }
 
 export enum ToolType {
@@ -35,28 +57,6 @@ export enum MaterialType {
 export interface MaterialData {
   type: MaterialType;
   name: string;
-  cost: number;
-  icon: string;
-}
-
-export interface CropData {
-  type: CropType;
-  name: string;
-  growthTime: number;
-  value: number;
-  cost: number;
-  icon: string;
-  color: string;
-  minLevel?: number;
-}
-
-export interface AnimalData {
-  type: AnimalType;
-  name: string;
-  produceName: string;
-  produceIcon: string;
-  produceTime: number; 
-  produceValue: number;
   cost: number;
   icon: string;
 }

@@ -1,9 +1,7 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { CropType, GameState, Plot, ToolType, AnimalType, AnimalSlot, MaterialType, CropData, AnimalData } from './types';
 import { CROPS, ANIMALS, MATERIALS, HOUSE_UPGRADES, INITIAL_COINS, INITIAL_PLOT_COUNT, XP_BASE, PLOT_UNLOCK_COST, MAX_PLOT_COUNT } from './constants';
 import PlotCard from './components/PlotCard';
-import { getFarmAdvice } from './services/geminiService';
 import { audioService } from './services/audioService';
 
 interface FloatingText {
@@ -17,7 +15,6 @@ interface FloatingText {
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'crops' | 'ranch' | 'house'>('crops');
   const [isLoaded, setIsLoaded] = useState(false);
-  const adviceIntervalRef = useRef<any>(null);
 
   const [gameState, setGameState] = useState<GameState>(() => {
     const defaultSeeds: any = {};
@@ -40,7 +37,16 @@ const App: React.FC = () => {
         };
       }
     } catch (e) {}
-    return { coins: INITIAL_COINS, xp: 0, level: 1, inventory: {}, seedInventory: defaultSeeds, materialInventory: defaultMaterials, animals: [], houseLevel: 0 };
+    return { 
+      coins: INITIAL_COINS, 
+      xp: 0, 
+      level: 1, 
+      inventory: {}, 
+      seedInventory: defaultSeeds, 
+      materialInventory: defaultMaterials, 
+      animals: [], 
+      houseLevel: 0
+    };
   });
 
   const [plots, setPlots] = useState<Plot[]>(() => {
@@ -99,13 +105,11 @@ const App: React.FC = () => {
   const upgradeHouse = () => {
     const nextLevel = gameState.houseLevel + 1;
     if (nextLevel >= HOUSE_UPGRADES.length) return;
-    
     const upgrade = HOUSE_UPGRADES[nextLevel];
     const canAffordCoins = gameState.coins >= upgrade.cost;
     const canAffordMaterials = Object.entries(upgrade.req).every(([mat, qty]) => 
       (gameState.materialInventory[mat as MaterialType] || 0) >= (qty as number)
     );
-
     if (canAffordCoins && canAffordMaterials) {
       audioService.playCash();
       setGameState(prev => {
@@ -115,18 +119,9 @@ const App: React.FC = () => {
         });
         const xpGain = 150;
         const result = handleLevelUp(prev.xp + xpGain, prev.level);
-        return {
-          ...prev,
-          coins: prev.coins - upgrade.cost,
-          materialInventory: newMaterials,
-          houseLevel: nextLevel,
-          xp: result.xp,
-          level: result.level
-        };
+        return { ...prev, coins: prev.coins - upgrade.cost, materialInventory: newMaterials, houseLevel: nextLevel, xp: result.xp, level: result.level };
       });
-      addFloatingText(window.innerWidth/2, window.innerHeight/2, "CASA EVOLUÍDA!", "🔨");
-    } else {
-      addFloatingText(window.innerWidth/2, window.innerHeight/2, "Faltam recursos!", "❌");
+      addFloatingText(window.innerWidth/2, 100, "CASA EVOLUÍDA!", "🔨");
     }
   };
 
@@ -140,15 +135,8 @@ const App: React.FC = () => {
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
       addFloatingText(rect.left + rect.width / 2, rect.top, `+1 ${data.produceIcon}`, data.produceIcon);
       setGameState(prev => {
-        const xpGain = 10;
-        const result = handleLevelUp(prev.xp + xpGain, prev.level);
-        return {
-          ...prev,
-          xp: result.xp,
-          level: result.level,
-          inventory: { ...prev.inventory, [data.produceName]: (prev.inventory[data.produceName] || 0) + 1 },
-          animals: prev.animals.map(a => a.id === id ? { ...a, lastProducedAt: Date.now() } : a)
-        };
+        const result = handleLevelUp(prev.xp + 10, prev.level);
+        return { ...prev, xp: result.xp, level: result.level, inventory: { ...prev.inventory, [data.produceName]: (prev.inventory[data.produceName] || 0) + 1 }, animals: prev.animals.map(a => a.id === id ? { ...a, lastProducedAt: Date.now() } : a) };
       });
     }
   };
@@ -176,11 +164,11 @@ const App: React.FC = () => {
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col items-end gap-2">
           <div className="flex bg-black/10 backdrop-blur-md p-1 rounded-2xl">
-             <button onClick={() => setActiveTab('crops')} className={`px-3 py-2 rounded-xl text-[9px] font-game transition-all ${activeTab === 'crops' ? 'bg-green-500 text-white shadow-md' : 'text-green-900'}`}>HORTA</button>
-             <button onClick={() => setActiveTab('ranch')} className={`px-3 py-2 rounded-xl text-[9px] font-game transition-all ${activeTab === 'ranch' ? 'bg-orange-500 text-white shadow-md' : 'text-orange-900'}`}>RANCHO</button>
-             <button onClick={() => setActiveTab('house')} className={`px-3 py-2 rounded-xl text-[9px] font-game transition-all ${activeTab === 'house' ? 'bg-indigo-500 text-white shadow-md' : 'text-indigo-900'}`}>CASA</button>
+             <button onClick={() => setActiveTab('crops')} className={`px-5 py-2.5 rounded-xl text-[10px] font-game transition-all ${activeTab === 'crops' ? 'bg-green-500 text-white shadow-md' : 'text-green-900'}`}>HORTA</button>
+             <button onClick={() => setActiveTab('ranch')} className={`px-5 py-2.5 rounded-xl text-[10px] font-game transition-all ${activeTab === 'ranch' ? 'bg-orange-500 text-white shadow-md' : 'text-orange-900'}`}>RANCHO</button>
+             <button onClick={() => setActiveTab('house')} className={`px-5 py-2.5 rounded-xl text-[10px] font-game transition-all ${activeTab === 'house' ? 'bg-indigo-500 text-white shadow-md' : 'text-indigo-900'}`}>CASA</button>
           </div>
           <button onClick={() => { audioService.playPop(); setIsStoreOpen(true); }} className="bg-amber-500 p-2.5 rounded-2xl shadow-lg text-2xl border-b-4 border-amber-700 active:translate-y-1 active:border-b-0 transition-all">🏪</button>
         </div>
@@ -192,7 +180,7 @@ const App: React.FC = () => {
           {activeTab === 'crops' ? (
             <div className="relative p-1 rounded-[2.5rem] shadow-2xl border-4 border-green-900/20 overflow-hidden bg-[#15803d]">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,_#4ade80_0%,_#166534_100%)] opacity-95" />
-              <div className="relative z-10 overflow-y-auto scrollbar-hide h-[340px] p-2">
+              <div className="relative z-10 overflow-y-auto scrollbar-hide h-[360px] p-2">
                 <div className="grid grid-cols-3 gap-2.5">
                   {plots.map(plot => (
                     <PlotCard key={plot.id} plot={plot} selectedTool={selectedTool} selectedSeed={selectedSeed} onAction={(id, e) => {
@@ -212,8 +200,7 @@ const App: React.FC = () => {
                         const ready = (Date.now() - (plotRef.plantedAt || 0)) / 1000 > growthNeeded;
                         if(ready) {
                           setGameState(p => {
-                            const xpGain = 5;
-                            const result = handleLevelUp(p.xp + xpGain, p.level);
+                            const result = handleLevelUp(p.xp + 5, p.level);
                             return {...p, xp: result.xp, level: result.level, inventory: {...p.inventory, [c.name]: (p.inventory[c.name]||0)+1}};
                           });
                           setPlots(ps => ps.map(p => p.id === id ? {...p, crop: null, plantedAt: null, watered: false} : p));
@@ -254,17 +241,12 @@ const App: React.FC = () => {
              </div>
           ) : (
             <div className="flex flex-col items-center gap-6 w-full max-w-sm">
-              <div className="relative group">
-                <div className="absolute -inset-4 bg-indigo-500/20 rounded-full blur-xl animate-pulse"></div>
-                <span className="text-[120px] relative drop-shadow-2xl animate-bounce-slow">
-                  {HOUSE_UPGRADES[gameState.houseLevel].icon}
-                </span>
-              </div>
-              
+              <span className="text-[120px] relative drop-shadow-2xl animate-bounce-slow">
+                {HOUSE_UPGRADES[gameState.houseLevel].icon}
+              </span>
               <div className="bg-white/90 backdrop-blur p-6 rounded-[2.5rem] shadow-2xl w-full border-t-4 border-indigo-200">
                 <h3 className="font-game text-xl text-indigo-900 text-center mb-1">{HOUSE_UPGRADES[gameState.houseLevel].name}</h3>
                 <p className="text-[10px] text-center text-indigo-500 uppercase font-bold tracking-widest mb-4">Nível {gameState.houseLevel}</p>
-                
                 {gameState.houseLevel < HOUSE_UPGRADES.length - 1 ? (
                   <div className="space-y-4">
                     <div className="grid grid-cols-3 gap-2">
@@ -277,7 +259,6 @@ const App: React.FC = () => {
                         </div>
                       ))}
                     </div>
-                    
                     <button onClick={upgradeHouse} className="w-full bg-indigo-600 text-white font-game py-4 rounded-2xl shadow-lg border-b-4 border-indigo-800 active:border-b-0 active:translate-y-1 transition-all">
                       CONSTRUIR (${HOUSE_UPGRADES[gameState.houseLevel+1].cost})
                     </button>
@@ -286,21 +267,12 @@ const App: React.FC = () => {
                   <div className="text-center py-4 text-amber-600 font-game">CASA COMPLETA! 🎉</div>
                 )}
               </div>
-              
-              <div className="flex gap-2 w-full">
-                 {Object.values(MaterialType).map(m => (
-                   <div key={m} className="flex-1 bg-white/60 p-2 rounded-xl text-center border border-white">
-                      <span className="text-xl block">{MATERIALS[m].icon}</span>
-                      <span className="text-[10px] font-bold text-indigo-900">{gameState.materialInventory[m]}</span>
-                   </div>
-                 ))}
-              </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* CROPS TOOLBAR */}
+      {/* FOOTER ACTION BAR */}
       {activeTab === 'crops' && (
         <div className="z-20 bg-amber-50/95 p-3 border-t-2 border-amber-200 rounded-t-[2.5rem] shrink-0">
           <div className="flex justify-center gap-6 mb-3">
@@ -314,7 +286,6 @@ const App: React.FC = () => {
                 <button key={type} disabled={isLocked} onClick={() => { setSelectedSeed(type); setSelectedTool(ToolType.SEED); audioService.playPop(); }} className={`min-w-[60px] p-2 rounded-xl border-2 transition-all relative ${selectedSeed === type ? 'bg-white border-amber-500 scale-105 shadow-md' : 'bg-white/50 border-transparent'} ${isLocked ? 'grayscale opacity-50' : ''}`}>
                   <div className="absolute -top-1 -left-1 bg-amber-600 text-white text-[8px] px-1.5 rounded-full z-10">x{gameState.seedInventory[type] || 0}</div>
                   <span className="text-2xl block">{isLocked ? '🔒' : CROPS[type].icon}</span>
-                  {isLocked && <span className="text-[8px] font-bold text-red-600">Lvl {CROPS[type].minLevel}</span>}
                 </button>
               );
             })}
@@ -322,7 +293,7 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* CENTRAL STORE MODAL - UI FIX: Overflow e Z-Index */}
+      {/* STORE MODAL */}
       {isStoreOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in">
           <div className="bg-amber-50 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border-4 border-white/20">
@@ -398,13 +369,10 @@ const App: React.FC = () => {
                   </div>
                 )
               ))}
-              {storeTab === 'sell' && Object.values(gameState.inventory).every(q => (q as number) === 0) && (
-                <div className="text-center py-10 opacity-40 font-game text-[10px]">Inventário Vazio</div>
-              )}
             </div>
             
             <div className="p-6 bg-white border-t flex justify-between items-center shrink-0">
-              <div className="font-game text-lg text-amber-600">💰 Moedas: {gameState.coins}</div>
+              <div className="font-game text-lg text-amber-600">Carteira: ${gameState.coins}</div>
               <button onClick={() => setIsStoreOpen(false)} className="bg-amber-500 text-white font-game px-8 py-3 rounded-2xl text-[10px] shadow-lg border-b-4 border-amber-700 active:translate-y-1 active:border-b-0 transition-all uppercase tracking-widest">Fechar</button>
             </div>
           </div>
@@ -433,6 +401,7 @@ const App: React.FC = () => {
           50% { transform: translateY(-10px); }
         }
         .animate-bounce-slow { animation: bounce-slow 2s infinite ease-in-out; }
+        
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
