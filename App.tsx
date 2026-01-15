@@ -150,106 +150,116 @@ const App: React.FC = () => {
     return (
       <div className="fixed inset-0 z-[500] bg-gradient-to-b from-green-400 via-green-500 to-emerald-600 overflow-y-auto overflow-x-hidden p-6 text-white font-game flex flex-col items-center">
         <div className="max-w-2xl w-full flex flex-col items-center">
-          {/* LOGO E NOME */}
+          
+          {/* NOME DO JOGO */}
           <div className="text-center mt-12 animate-bounce-slow">
-            <span className="text-8xl md:text-9xl block mb-2 drop-shadow-xl">🌾</span>
+            <span className="text-8xl block mb-4 drop-shadow-xl">🌾</span>
             <h1 className="text-5xl md:text-7xl uppercase tracking-tighter drop-shadow-2xl">Harvest Farm</h1>
-            <p className="text-lg md:text-xl text-green-100 mt-2 font-game bg-black/10 px-4 py-1 rounded-full inline-block">Local Edition</p>
+            <p className="text-lg text-green-100 mt-2 font-game bg-black/10 px-4 py-1 rounded-full inline-block">Local Edition</p>
           </div>
 
           <button 
             onClick={() => { audioService.playPop(); setGameStarted(true); }}
-            className="mt-12 bg-yellow-400 hover:bg-yellow-300 text-yellow-900 text-3xl px-12 py-5 rounded-[2.5rem] shadow-[0_10px_0_#b45309] active:translate-y-2 active:shadow-none transition-all animate-pulse-fast border-4 border-white"
+            className="mt-12 bg-yellow-400 hover:bg-yellow-300 text-yellow-900 text-3xl px-12 py-5 rounded-[2.5rem] shadow-[0_10px_0_#b45309] active:translate-y-2 active:shadow-none transition-all animate-pulse border-4 border-white"
           >
-            JOGAR AGORA!
+            JOGAR AGORA
           </button>
 
-          {/* HISTÓRIA */}
-          <section className="mt-20 w-full bg-white/20 backdrop-blur-md p-8 rounded-[3rem] border-2 border-white/30">
+          {/* HISTÓRIA DO JOGO */}
+          <section className="mt-20 w-full bg-white/20 backdrop-blur-md p-8 rounded-[3rem] border-2 border-white/30 shadow-2xl">
             <h2 className="text-3xl mb-4 flex items-center gap-3">📜 História</h2>
             <p className="text-lg leading-relaxed font-sans font-semibold">
-              Você acaba de herdar a antiga fazenda do seu avô em uma ilha isolada. 
-              O solo é mágico e o tempo corre de forma única! Sua missão é restaurar a glória da 
-              fazenda, expandir seus lotes, cuidar de animais raros e construir uma mansão digna de um barão da agricultura.
+              O seu avô deixou para você uma pequena gleba de terra mágica. Antigamente, esta fazenda alimentava 
+              toda a região, mas agora está em suas mãos restaurar sua glória. O solo aqui é especial: com o 
+              carinho certo e água pura, as plantas crescem em minutos! Comece do zero e torne-se o mestre da colheita.
             </p>
           </section>
 
-          {/* LISTA DE ANIMAIS */}
+          {/* LISTA DOS ANIMAIS */}
           <section className="mt-8 w-full">
-            <h2 className="text-3xl mb-6 text-center">🐾 Nossos Moradores</h2>
+            <h2 className="text-3xl mb-6 text-center">🐾 Nossos Animais</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {Object.values(ANIMALS).map(a => (
-                <div key={a.type} className="bg-white/95 p-6 rounded-3xl shadow-xl flex flex-col items-center text-slate-800">
+                <div key={a.type} className="bg-white/95 p-6 rounded-3xl shadow-xl flex flex-col items-center text-slate-800 border-b-4 border-slate-200">
                   <span className="text-6xl mb-2">{a.icon}</span>
-                  <h3 className="text-xl">{a.name}</h3>
-                  <p className="text-[10px] text-center uppercase font-bold text-orange-600">Produz: {a.produceIcon} {a.produceName}</p>
+                  <h3 className="text-xl font-game">{a.name}</h3>
+                  <div className="mt-2 flex items-center gap-2 bg-orange-100 px-3 py-1 rounded-full">
+                    <span className="text-sm font-bold text-orange-700">Produz: {a.produceIcon} {a.produceName}</span>
+                  </div>
                 </div>
               ))}
             </div>
           </section>
 
           {/* COMO JOGAR */}
-          <section className="mt-8 w-full bg-amber-500/30 p-8 rounded-[3rem] border-2 border-amber-300">
+          <section className="mt-8 w-full bg-amber-500/40 p-8 rounded-[3rem] border-2 border-amber-300 shadow-2xl">
             <h2 className="text-3xl mb-6 text-center">📖 Como Jogar</h2>
-            <div className="space-y-4 font-sans font-bold">
-              <div className="flex items-center gap-4 bg-white/10 p-4 rounded-2xl">
-                <span className="bg-white text-amber-600 w-10 h-10 rounded-full flex items-center justify-center text-xl">1</span>
-                <p>Compre sementes no 🏪 Mercado e plante na terra.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-sans font-bold">
+              <div className="flex items-start gap-4 bg-black/10 p-4 rounded-2xl">
+                <span className="text-2xl">🌱</span>
+                <p>Selecione uma semente e clique em um lote de terra para plantar.</p>
               </div>
-              <div className="flex items-center gap-4 bg-white/10 p-4 rounded-2xl">
-                <span className="bg-white text-amber-600 w-10 h-10 rounded-full flex items-center justify-center text-xl">2</span>
-                <p>Use a 💧 Água para acelerar o crescimento em 2x!</p>
+              <div className="flex items-start gap-4 bg-black/10 p-4 rounded-2xl">
+                <span className="text-2xl">💧</span>
+                <p>Use o regador para acelerar o crescimento em 50%!</p>
               </div>
-              <div className="flex items-center gap-4 bg-white/10 p-4 rounded-2xl">
-                <span className="bg-white text-amber-600 w-10 h-10 rounded-full flex items-center justify-center text-xl">3</span>
-                <p>Colha clicando na planta madura e venda no Mercado por 💰 Moedas.</p>
+              <div className="flex items-start gap-4 bg-black/10 p-4 rounded-2xl">
+                <span className="text-2xl">✨</span>
+                <p>Quando brilhar, clique para colher e ganhar experiência.</p>
+              </div>
+              <div className="flex items-start gap-4 bg-black/10 p-4 rounded-2xl">
+                <span className="text-2xl">🏪</span>
+                <p>Venda seus produtos no Mercado para comprar novas expansões.</p>
               </div>
             </div>
           </section>
 
-          {/* PRODUÇÃO */}
-          <section className="mt-8 w-full bg-indigo-600/30 p-8 rounded-[3rem] border-2 border-indigo-400">
-            <h2 className="text-3xl mb-4">⚙️ Produção & Estratégia</h2>
-            <p className="font-sans font-bold">
-              Regar não é obrigatório, mas reduz o tempo de crescimento pela metade. 
-              Animais produzem recursos automaticamente a cada ciclo. 
-              Dica: Foque em materiais como Madeira e Tijolo para evoluir sua Casa e ganhar bônus de XP massivos!
+          {/* COMO FUNCIONA A PRODUÇÃO */}
+          <section className="mt-8 w-full bg-blue-600/30 p-8 rounded-[3rem] border-2 border-blue-400 shadow-2xl">
+            <h2 className="text-3xl mb-4">⚙️ Como funciona a produção</h2>
+            <p className="font-sans font-bold leading-relaxed">
+              Cada planta tem um tempo de maturação natural. Ao regar, você reduz esse tempo pela metade 
+              imediatamente. Os animais do rancho (Galinhas, Abelhas e Vacas) produzem recursos de forma 
+              automática a cada intervalo fixo. Basta clicar neles quando o ícone de recurso aparecer para coletar!
             </p>
           </section>
 
-          {/* FOTOS DO JOGO (SIMULADO COM EMOJIS/DESIGN) */}
+          {/* FOTOS DO JOGO */}
           <section className="mt-8 w-full mb-20 text-center">
             <h2 className="text-3xl mb-6">📸 Galeria da Fazenda</h2>
             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide px-2">
-              <div className="min-w-[280px] h-48 bg-green-800 rounded-3xl flex items-center justify-center border-4 border-white relative overflow-hidden shadow-2xl">
-                <span className="text-6xl absolute top-4 left-4 opacity-30">🌻</span>
-                <span className="text-6xl absolute bottom-4 right-4 opacity-30">🚜</span>
-                <p className="text-xl">Horta Vibrante</p>
+              <div className="min-w-[300px] h-48 bg-emerald-700 rounded-3xl flex items-center justify-center border-4 border-white shadow-2xl relative group overflow-hidden">
+                 <div className="absolute inset-0 bg-green-500/20 group-hover:bg-transparent transition-all"></div>
+                 <span className="text-8xl">🌻</span>
+                 <p className="absolute bottom-4 font-game text-white text-lg">Horta em Ação</p>
               </div>
-              <div className="min-w-[280px] h-48 bg-orange-700 rounded-3xl flex items-center justify-center border-4 border-white relative overflow-hidden shadow-2xl">
-                <span className="text-6xl absolute top-4 left-4 opacity-30">🐮</span>
-                <span className="text-6xl absolute bottom-4 right-4 opacity-30">🍯</span>
-                <p className="text-xl">Rancho Fértil</p>
+              <div className="min-w-[300px] h-48 bg-orange-600 rounded-3xl flex items-center justify-center border-4 border-white shadow-2xl relative group overflow-hidden">
+                 <div className="absolute inset-0 bg-orange-500/20 group-hover:bg-transparent transition-all"></div>
+                 <span className="text-8xl">🐮</span>
+                 <p className="absolute bottom-4 font-game text-white text-lg">Rancho Feliz</p>
               </div>
-              <div className="min-w-[280px] h-48 bg-indigo-900 rounded-3xl flex items-center justify-center border-4 border-white relative overflow-hidden shadow-2xl">
-                <span className="text-6xl absolute top-4 left-4 opacity-30">🏛️</span>
-                <span className="text-6xl absolute bottom-4 right-4 opacity-30">💎</span>
-                <p className="text-xl">Mansão Colonial</p>
+              <div className="min-w-[300px] h-48 bg-indigo-800 rounded-3xl flex items-center justify-center border-4 border-white shadow-2xl relative group overflow-hidden">
+                 <div className="absolute inset-0 bg-indigo-500/20 group-hover:bg-transparent transition-all"></div>
+                 <span className="text-8xl">🏛️</span>
+                 <p className="absolute bottom-4 font-game text-white text-lg">Mansão Rural</p>
               </div>
             </div>
           </section>
+
+          <p className="text-white/40 mb-12 font-sans text-sm">© 2024 Harvest Farm Team</p>
         </div>
         <style>{`
-          .animate-pulse-fast { animation: pulse-fast 1.5s infinite ease-in-out; }
-          @keyframes pulse-fast { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+          .animate-bounce-slow { animation: bounce-slow 3s infinite ease-in-out; }
+          @keyframes bounce-slow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+          .scrollbar-hide::-webkit-scrollbar { display: none; }
+          .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         `}</style>
       </div>
     );
   }
 
-  // JOGO PRINCIPAL
   return (
-    <div className="fixed inset-0 flex flex-col bg-gradient-to-b from-sky-400 to-sky-200 overflow-hidden text-slate-800 touch-none select-none h-[100dvh] pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] animate-in fade-in duration-1000">
+    <div className="fixed inset-0 flex flex-col bg-gradient-to-b from-sky-400 to-sky-200 overflow-hidden text-slate-800 touch-none select-none h-[100dvh] pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] animate-in fade-in duration-500">
       
       {/* HEADER STATS */}
       <div className="z-10 px-4 pt-4 flex justify-between items-start shrink-0">
