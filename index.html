@@ -10,7 +10,7 @@
     <style>
         body {
             font-family: 'Quicksand', sans-serif;
-            background-color: #f0fdf4;
+            background-color: #38bdf8; /* Cor do splash como fundo padrão para evitar flash branco */
             user-select: none;
             -webkit-tap-highlight-color: transparent;
             overflow: hidden;
@@ -21,23 +21,30 @@
         }
         .font-game { font-family: 'Fredoka One', cursive; }
         
+        #root {
+            height: 100vh;
+            width: 100vw;
+        }
+
         #root:empty {
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 100vh;
             background: linear-gradient(to bottom, #38bdf8, #bae6fd);
         }
+
         #root:empty::after {
             content: "Carregando Fazenda...";
             font-family: 'Fredoka One', cursive;
             color: white;
             font-size: 1.5rem;
-            animation: pulse 1.5s infinite;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            animation: pulse 1.2s infinite ease-in-out;
         }
+
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.95); }
         }
     </style>
     <script type="importmap">
@@ -46,13 +53,13 @@
     "react": "https://esm.sh/react@19.0.0",
     "react-dom": "https://esm.sh/react-dom@19.0.0",
     "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/"
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
   }
 }
 </script>
 </head>
-<body class="bg-green-50 text-slate-800">
+<body class="text-slate-800">
     <div id="root"></div>
     <script type="module" src="index.tsx"></script>
 </body>

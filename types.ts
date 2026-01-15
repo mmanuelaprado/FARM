@@ -2,10 +2,14 @@
 export enum CropType {
   WHEAT = 'WHEAT',
   CORN = 'CORN',
+  BLUEBERRY = 'BLUEBERRY',
   CARROT = 'CARROT',
+  STRAWBERRY = 'STRAWBERRY',
   TOMATO = 'TOMATO',
   PUMPKIN = 'PUMPKIN',
-  DRAGON_FRUIT = 'DRAGON_FRUIT'
+  DRAGON_FRUIT = 'DRAGON_FRUIT',
+  PINEAPPLE = 'PINEAPPLE',
+  GIANT_WATERMELON = 'GIANT_WATERMELON'
 }
 
 export enum AnimalType {
@@ -16,6 +20,19 @@ export enum AnimalType {
 export enum ToolType {
   SEED = 'SEED',
   WATER = 'WATER'
+}
+
+export enum MaterialType {
+  WOOD = 'WOOD',
+  BRICK = 'BRICK',
+  TILE = 'TILE'
+}
+
+export interface MaterialData {
+  type: MaterialType;
+  name: string;
+  cost: number;
+  icon: string;
 }
 
 export interface CropData {
@@ -34,7 +51,7 @@ export interface AnimalData {
   name: string;
   produceName: string;
   produceIcon: string;
-  produceTime: number; // segundos
+  produceTime: number; 
   produceValue: number;
   cost: number;
   icon: string;
@@ -58,7 +75,9 @@ export interface GameState {
   coins: number;
   xp: number;
   level: number;
-  inventory: Record<string, number>; // Frutos e produtos animais
+  inventory: Record<string, number>; 
   seedInventory: Record<CropType, number>;
+  materialInventory: Record<MaterialType, number>;
   animals: AnimalSlot[];
+  houseLevel: number;
 }

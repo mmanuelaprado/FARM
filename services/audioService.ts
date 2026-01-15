@@ -1,7 +1,7 @@
 
 /**
  * Serviço para gerar sons simples usando Web Audio API.
- * Ideal para jogos leves sem necessidade de carregar assets pesados.
+ * Som de colheita otimizado para ser proeminente e satisfatório.
  */
 class AudioService {
   private ctx: AudioContext | null = null;
@@ -18,41 +18,57 @@ class AudioService {
 
     const now = this.ctx.currentTime;
     
-    // Oscilador Principal (Corpo do som)
+    // 1. Corpo Principal (O "Plop" da colheita)
     const osc1 = this.ctx.createOscillator();
     const gain1 = this.ctx.createGain();
     
     osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(400, now);
-    osc1.frequency.exponentialRampToValueAtTime(1000, now + 0.15);
+    osc1.frequency.setValueAtTime(220, now); // Frequência mais baixa para corpo
+    osc1.frequency.exponentialRampToValueAtTime(660, now + 0.1);
 
     gain1.gain.setValueAtTime(0, now);
-    gain1.gain.linearRampToValueAtTime(0.3, now + 0.02); // Ataque rápido
-    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.4); // Decaimento longo (reverb-like)
+    gain1.gain.linearRampToValueAtTime(0.5, now + 0.01); 
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
 
     osc1.connect(gain1);
     gain1.connect(this.ctx.destination);
 
-    // Oscilador Harmônico (Brilho/Satisfação)
+    // 2. Brilho Harmônico (O "Sparkle" de sucesso)
     const osc2 = this.ctx.createOscillator();
     const gain2 = this.ctx.createGain();
     
-    osc2.type = 'triangle'; // Um pouco mais rico em harmônicos que 'sine'
-    osc2.frequency.setValueAtTime(800, now);
-    osc2.frequency.exponentialRampToValueAtTime(1600, now + 0.1);
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(880, now);
+    osc2.frequency.exponentialRampToValueAtTime(1320, now + 0.15);
 
     gain2.gain.setValueAtTime(0, now);
-    gain2.gain.linearRampToValueAtTime(0.15, now + 0.02);
+    gain2.gain.linearRampToValueAtTime(0.2, now + 0.03);
     gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
 
     osc2.connect(gain2);
     gain2.connect(this.ctx.destination);
 
+    // 3. Simulação de Reverberação/Eco (Camada de cauda longa)
+    const osc3 = this.ctx.createOscillator();
+    const gain3 = this.ctx.createGain();
+    
+    osc3.type = 'sine';
+    osc3.frequency.setValueAtTime(440, now + 0.05);
+    
+    gain3.gain.setValueAtTime(0, now + 0.05);
+    gain3.gain.linearRampToValueAtTime(0.1, now + 0.1);
+    gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.8); // Cauda bem longa
+
+    osc3.connect(gain3);
+    gain3.connect(this.ctx.destination);
+
     osc1.start(now);
     osc2.start(now);
+    osc3.start(now + 0.05);
     
-    osc1.stop(now + 0.4);
-    osc2.stop(now + 0.4);
+    osc1.stop(now + 0.5);
+    osc2.stop(now + 0.3);
+    osc3.stop(now + 0.8);
   }
 
   playPop() {
@@ -82,7 +98,6 @@ class AudioService {
 
     const now = this.ctx.currentTime;
     
-    // Primeiro tom (curto e metálico)
     const osc1 = this.ctx.createOscillator();
     const gain1 = this.ctx.createGain();
     osc1.type = 'sine';
@@ -94,7 +109,6 @@ class AudioService {
     osc1.start(now);
     osc1.stop(now + 0.1);
 
-    // Segundo tom (mais alto, típico ka-ching)
     const osc2 = this.ctx.createOscillator();
     const gain2 = this.ctx.createGain();
     osc2.type = 'sine';

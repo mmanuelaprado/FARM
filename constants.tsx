@@ -1,90 +1,40 @@
 
-import { CropType, CropData, AnimalType, AnimalData } from './types';
+import { CropType, CropData, AnimalType, AnimalData, MaterialType, MaterialData } from './types';
 
 export const CROPS: Record<CropType, CropData> = {
-  [CropType.WHEAT]: {
-    type: CropType.WHEAT,
-    name: 'Trigo',
-    growthTime: 5,
-    value: 12,
-    cost: 2,
-    icon: '🌾',
-    color: 'bg-yellow-200'
-  },
-  [CropType.CORN]: {
-    type: CropType.CORN,
-    name: 'Milho',
-    growthTime: 15,
-    value: 35,
-    cost: 5,
-    icon: '🌽',
-    color: 'bg-yellow-400'
-  },
-  [CropType.CARROT]: {
-    type: CropType.CARROT,
-    name: 'Cenoura',
-    growthTime: 30,
-    value: 90,
-    cost: 10,
-    icon: '🥕',
-    color: 'bg-orange-400'
-  },
-  [CropType.TOMATO]: {
-    type: CropType.TOMATO,
-    name: 'Tomate',
-    growthTime: 60,
-    value: 280,
-    cost: 25,
-    icon: '🍅',
-    color: 'bg-red-400'
-  },
-  [CropType.PUMPKIN]: {
-    type: CropType.PUMPKIN,
-    name: 'Abóbora',
-    growthTime: 120,
-    value: 750,
-    cost: 50,
-    icon: '🎃',
-    color: 'bg-orange-600'
-  },
-  [CropType.DRAGON_FRUIT]: {
-    type: CropType.DRAGON_FRUIT,
-    name: 'Fruta Dragão',
-    growthTime: 300,
-    value: 2500,
-    cost: 200,
-    icon: '🐲',
-    color: 'bg-purple-600',
-    minLevel: 10
-  }
+  [CropType.WHEAT]: { type: CropType.WHEAT, name: 'Trigo', growthTime: 5, value: 12, cost: 2, icon: '🌾', color: 'bg-yellow-200' },
+  [CropType.CORN]: { type: CropType.CORN, name: 'Milho', growthTime: 12, value: 30, cost: 5, icon: '🌽', color: 'bg-yellow-400', minLevel: 2 },
+  [CropType.BLUEBERRY]: { type: CropType.BLUEBERRY, name: 'Mirtilo', growthTime: 20, value: 65, cost: 12, icon: '🫐', color: 'bg-blue-400', minLevel: 4 },
+  [CropType.CARROT]: { type: CropType.CARROT, name: 'Cenoura', growthTime: 30, value: 100, cost: 15, icon: '🥕', color: 'bg-orange-400', minLevel: 5 },
+  [CropType.STRAWBERRY]: { type: CropType.STRAWBERRY, name: 'Morango', growthTime: 45, value: 180, cost: 30, icon: '🍓', color: 'bg-red-400', minLevel: 7 },
+  [CropType.TOMATO]: { type: CropType.TOMATO, name: 'Tomate', growthTime: 60, value: 300, cost: 45, icon: '🍅', color: 'bg-red-500', minLevel: 8 },
+  [CropType.PUMPKIN]: { type: CropType.PUMPKIN, name: 'Abóbora', growthTime: 120, value: 850, cost: 100, icon: '🎃', color: 'bg-orange-600', minLevel: 9 },
+  [CropType.DRAGON_FRUIT]: { type: CropType.DRAGON_FRUIT, name: 'Fruta Dragão', growthTime: 300, value: 3200, cost: 350, icon: '🐲', color: 'bg-purple-600', minLevel: 10 },
+  [CropType.PINEAPPLE]: { type: CropType.PINEAPPLE, name: 'Abacaxi', growthTime: 600, value: 7500, cost: 800, icon: '🍍', color: 'bg-yellow-500', minLevel: 15 },
+  [CropType.GIANT_WATERMELON]: { type: CropType.GIANT_WATERMELON, name: 'Melancia G.', growthTime: 1200, value: 18000, cost: 2000, icon: '🍉', color: 'bg-green-500', minLevel: 20 }
 };
 
 export const ANIMALS: Record<AnimalType, AnimalData> = {
-  [AnimalType.CHICKEN]: {
-    type: AnimalType.CHICKEN,
-    name: 'Galinha',
-    produceName: 'Ovo',
-    produceIcon: '🥚',
-    produceTime: 20,
-    produceValue: 80,
-    cost: 100,
-    icon: '🐔'
-  },
-  [AnimalType.COW]: {
-    type: AnimalType.COW,
-    name: 'Vaca',
-    produceName: 'Leite',
-    produceIcon: '🥛',
-    produceTime: 45,
-    produceValue: 250,
-    cost: 250,
-    icon: '🐄'
-  }
+  [AnimalType.CHICKEN]: { type: AnimalType.CHICKEN, name: 'Galinha', produceName: 'Ovo', produceIcon: '🥚', produceTime: 20, produceValue: 80, cost: 100, icon: '🐔' },
+  [AnimalType.COW]: { type: AnimalType.COW, name: 'Vaca', produceName: 'Leite', produceIcon: '🥛', produceTime: 45, produceValue: 250, cost: 250, icon: '🐄' }
 };
 
+export const MATERIALS: Record<MaterialType, MaterialData> = {
+  [MaterialType.WOOD]: { type: MaterialType.WOOD, name: 'Madeira', cost: 50, icon: '🪵' },
+  [MaterialType.BRICK]: { type: MaterialType.BRICK, name: 'Tijolo', cost: 150, icon: '🧱' },
+  [MaterialType.TILE]: { type: MaterialType.TILE, name: 'Telha', cost: 300, icon: '🧇' }
+};
+
+export const HOUSE_UPGRADES = [
+  { level: 0, name: "Acampamento", icon: "⛺", req: { [MaterialType.WOOD]: 0, [MaterialType.BRICK]: 0, [MaterialType.TILE]: 0 }, cost: 0 },
+  { level: 1, name: "Barraco de Madeira", icon: "🛖", req: { [MaterialType.WOOD]: 5, [MaterialType.BRICK]: 0, [MaterialType.TILE]: 0 }, cost: 500 },
+  { level: 2, name: "Cabana Rústica", icon: "🏠", req: { [MaterialType.WOOD]: 15, [MaterialType.BRICK]: 10, [MaterialType.TILE]: 0 }, cost: 2000 },
+  { level: 3, name: "Fazenda de Luxo", icon: "🏡", req: { [MaterialType.WOOD]: 30, [MaterialType.BRICK]: 30, [MaterialType.TILE]: 15 }, cost: 8000 },
+  { level: 4, name: "Mansão Colonial", icon: "🏛️", req: { [MaterialType.WOOD]: 60, [MaterialType.BRICK]: 60, [MaterialType.TILE]: 40 }, cost: 25000 }
+];
+
 export const XP_PER_LEVEL = 100;
-export const INITIAL_COINS = 50;
+export const INITIAL_COINS = 100;
 export const INITIAL_PLOT_COUNT = 6;
 export const MAX_PLOT_COUNT = 12;
 export const PLOT_UNLOCK_COST = 200;
-export const ANIMAL_SLOT_COST = 300;

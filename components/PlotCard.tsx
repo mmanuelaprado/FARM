@@ -47,80 +47,69 @@ const PlotCard: React.FC<PlotCardProps> = ({ plot, selectedTool, selectedSeed, o
     return (
       <div 
         onClick={(e) => onAction(plot.id, e)}
-        className="relative w-full aspect-square rounded-[1.8rem] cursor-pointer transition-all duration-300 transform active:scale-95
-          bg-[#3d2b1f] border-4 border-dashed border-white/20
-          flex flex-col items-center justify-center overflow-hidden group shadow-lg"
+        className="relative w-full aspect-square rounded-2xl md:rounded-[1.5rem] cursor-pointer transition-all duration-300 transform active:scale-95
+          bg-[#3d2b1f] border-2 border-dashed border-white/20
+          flex flex-col items-center justify-center overflow-hidden group shadow-md"
       >
-        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors" />
-        <span className="text-2xl mb-1 grayscale z-10">🔒</span>
-        <span className="font-game text-[10px] text-white/80 z-10">${PLOT_UNLOCK_COST}</span>
-        <div className="absolute inset-0 opacity-10 pointer-events-none" 
-             style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/dark-matter.png")' }} />
+        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20" />
+        <span className="text-xl md:text-2xl mb-1 grayscale z-10 opacity-60">🔒</span>
+        <span className="font-game text-[9px] md:text-xs text-white z-10 tracking-widest bg-black/20 px-2 py-0.5 rounded-full">${PLOT_UNLOCK_COST}</span>
       </div>
     );
   }
 
   const getGrowthScale = () => {
     if (!plot.crop) return 'scale-0';
-    if (isReady) return 'scale-125 sway';
+    if (isReady) return 'scale-110';
     if (progress < 30) return 'scale-50 opacity-60';
-    if (progress < 70) return 'scale-90 opacity-90';
-    return 'scale-110 opacity-100';
+    if (progress < 70) return 'scale-80 opacity-90';
+    return 'scale-95 opacity-100';
   };
 
   return (
     <div 
       onClick={(e) => onAction(plot.id, e)}
-      className={`relative w-full aspect-square rounded-[1.8rem] cursor-pointer transition-all duration-500 transform active:scale-90
+      className={`relative w-full aspect-square rounded-2xl md:rounded-[1.5rem] cursor-pointer transition-all duration-300 transform active:scale-90
         ${plot.watered 
           ? 'bg-[radial-gradient(circle_at_center,_#3e2723_0%,_#1b1210_100%)]' 
           : 'bg-[radial-gradient(circle_at_center,_#795548_0%,_#4e342e_100%)]'}
-        border-4 border-[#064e3b]/30
+        border-b-4 border-[#064e3b]/40
         flex items-center justify-center overflow-hidden group 
-        shadow-[0_8px_0_rgba(0,0,0,0.2),_inset_0_-4px_10px_rgba(0,0,0,0.6),_0_0_20px_rgba(0,0,0,0.1)]`}
+        shadow-[0_4px_10px_rgba(0,0,0,0.3),_inset_0_-4px_8px_rgba(0,0,0,0.4)]`}
     >
-      <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay" 
-           style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/dark-matter.png")' }} />
-      
-      <div className={`absolute inset-0 bg-blue-400/25 transition-opacity duration-1000 ${plot.watered ? 'opacity-100' : 'opacity-0'}`} />
+      <div className={`absolute inset-0 bg-blue-400/30 transition-opacity duration-1000 ${plot.watered ? 'opacity-100' : 'opacity-0'}`} />
 
       {!plot.crop ? (
-        <div className="flex flex-col items-center opacity-0 group-hover:opacity-40 transition-opacity duration-300">
-          <span className="text-xl filter brightness-0 invert">{selectedTool === ToolType.SEED ? '🌱' : '💧'}</span>
+        <div className="opacity-0 group-hover:opacity-40 transition-opacity flex items-center justify-center">
+          <span className="text-2xl filter brightness-0 invert">{selectedTool === ToolType.SEED ? '🌱' : '💧'}</span>
         </div>
       ) : (
-        <div className="flex flex-col items-center z-10 w-full h-full justify-center">
-          <div className={`text-5xl transition-all duration-1000 ease-out drop-shadow-[0_6px_8px_rgba(0,0,0,0.6)]
-            ${isPlanting ? 'animate-[bounce_0.5s_ease-in-out] scale-150' : ''} 
+        <div className="flex flex-col items-center z-10 w-full h-full justify-center p-2">
+          <div className={`text-4xl md:text-5xl transition-all duration-700 ease-out drop-shadow-[0_4px_6px_rgba(0,0,0,0.6)]
+            ${isPlanting ? 'animate-bounce' : ''} 
             ${getGrowthScale()}
-            ${isReady ? 'filter brightness-110 drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]' : ''}`}
+            ${isReady ? 'animate-pulse' : ''}`}
           >
-            {isReady ? crop?.icon : (progress < 40 ? '🌱' : crop?.icon)}
+            {isReady ? crop?.icon : (progress < 40 ? '🌱' : (progress < 80 ? '🌿' : crop?.icon))}
           </div>
           
-          {isPlanting && (
-            <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-              <div className="w-16 h-16 rounded-full bg-amber-900/40 animate-ping" />
-            </div>
-          )}
-          
           {!isReady && (
-            <div className="absolute bottom-3 left-3 right-3 h-2 bg-black/50 rounded-full overflow-hidden border border-white/10 p-[1px]">
+            <div className="absolute bottom-2 left-2 right-2 h-1.5 bg-black/50 rounded-full overflow-hidden border border-white/10 shadow-inner">
               <div 
-                className={`h-full rounded-full transition-all duration-500 ease-linear ${plot.watered ? 'bg-gradient-to-r from-blue-400 to-blue-600' : 'bg-gradient-to-r from-green-400 to-green-600'}`}
+                className={`h-full rounded-full transition-all duration-500 ease-linear ${plot.watered ? 'bg-blue-400' : 'bg-green-500'}`}
                 style={{ width: `${progress}%` }}
               />
             </div>
           )}
           
           {isReady && (
-            <div className="absolute top-2 right-2 bg-yellow-400 rounded-full w-7 h-7 flex items-center justify-center animate-bounce shadow-lg text-xs border-2 border-white z-20">
+            <div className="absolute top-1.5 right-1.5 bg-yellow-400 rounded-full w-6 h-6 flex items-center justify-center animate-bounce shadow-lg text-[10px] border-2 border-white z-20">
               ✨
             </div>
           )}
 
           {plot.watered && !isReady && (
-            <div className="absolute top-2 left-2 text-sm animate-pulse drop-shadow-[0_1px_2px_black]">
+            <div className="absolute top-1.5 left-1.5 text-xs animate-pulse drop-shadow-md">
               💧
             </div>
           )}
