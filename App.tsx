@@ -64,7 +64,6 @@ const App: React.FC = () => {
   const [floatingTexts, setFloatingTexts] = useState<FloatingText[]>([]);
   const [currentTime, setCurrentTime] = useState(Date.now());
 
-  // Calcula XP necessário para o próximo nível (Progressivo)
   const xpToNextLevel = gameState.level * XP_BASE;
 
   useEffect(() => {
@@ -114,7 +113,7 @@ const App: React.FC = () => {
         Object.entries(upgrade.req).forEach(([mat, qty]) => {
           newMaterials[mat as MaterialType] -= (qty as number);
         });
-        const xpGain = 150; // Reduzido de 500
+        const xpGain = 150;
         const result = handleLevelUp(prev.xp + xpGain, prev.level);
         return {
           ...prev,
@@ -141,7 +140,7 @@ const App: React.FC = () => {
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
       addFloatingText(rect.left + rect.width / 2, rect.top, `+1 ${data.produceIcon}`, data.produceIcon);
       setGameState(prev => {
-        const xpGain = 10; // Reduzido de 30
+        const xpGain = 10;
         const result = handleLevelUp(prev.xp + xpGain, prev.level);
         return {
           ...prev,
@@ -213,7 +212,7 @@ const App: React.FC = () => {
                         const ready = (Date.now() - (plotRef.plantedAt || 0)) / 1000 > growthNeeded;
                         if(ready) {
                           setGameState(p => {
-                            const xpGain = 5; // Reduzido de 20
+                            const xpGain = 5;
                             const result = handleLevelUp(p.xp + xpGain, p.level);
                             return {...p, xp: result.xp, level: result.level, inventory: {...p.inventory, [c.name]: (p.inventory[c.name]||0)+1}};
                           });
@@ -323,7 +322,7 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* CENTRAL STORE MODAL */}
+      {/* CENTRAL STORE MODAL - UI FIX: Overflow e Z-Index */}
       {isStoreOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in">
           <div className="bg-amber-50 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border-4 border-white/20">
@@ -332,14 +331,14 @@ const App: React.FC = () => {
               <button onClick={() => setIsStoreOpen(false)} className="text-2xl p-2 bg-black/10 rounded-full w-10 h-10 flex items-center justify-center">✕</button>
             </div>
             
-            <div className="flex gap-1 px-4 mt-4 overflow-x-auto scrollbar-hide shrink-0">
-              <button onClick={() => setStoreTab('buy')} className={`px-4 py-2 rounded-xl font-game text-[9px] shrink-0 transition-all ${storeTab === 'buy' ? 'bg-green-500 text-white' : 'bg-white text-green-700'}`}>SEMENTES</button>
-              <button onClick={() => setStoreTab('animals')} className={`px-4 py-2 rounded-xl font-game text-[9px] shrink-0 transition-all ${storeTab === 'animals' ? 'bg-orange-500 text-white' : 'bg-white text-orange-700'}`}>ANIMAIS</button>
-              <button onClick={() => setStoreTab('materials')} className={`px-4 py-2 rounded-xl font-game text-[9px] shrink-0 transition-all ${storeTab === 'materials' ? 'bg-indigo-500 text-white' : 'bg-white text-indigo-700'}`}>MATERIAIS</button>
-              <button onClick={() => setStoreTab('sell')} className={`px-4 py-2 rounded-xl font-game text-[9px] shrink-0 transition-all ${storeTab === 'sell' ? 'bg-emerald-500 text-white' : 'bg-white text-emerald-700'}`}>VENDER</button>
+            <div className="flex gap-1 px-4 mt-4 overflow-x-auto scrollbar-hide shrink-0 pb-1">
+              <button onClick={() => setStoreTab('buy')} className={`px-4 py-2 rounded-xl font-game text-[9px] shrink-0 transition-all ${storeTab === 'buy' ? 'bg-green-500 text-white' : 'bg-white text-green-700 shadow-sm'}`}>SEMENTES</button>
+              <button onClick={() => setStoreTab('animals')} className={`px-4 py-2 rounded-xl font-game text-[9px] shrink-0 transition-all ${storeTab === 'animals' ? 'bg-orange-500 text-white' : 'bg-white text-orange-700 shadow-sm'}`}>ANIMAIS</button>
+              <button onClick={() => setStoreTab('materials')} className={`px-4 py-2 rounded-xl font-game text-[9px] shrink-0 transition-all ${storeTab === 'materials' ? 'bg-indigo-500 text-white' : 'bg-white text-indigo-700 shadow-sm'}`}>MATERIAIS</button>
+              <button onClick={() => setStoreTab('sell')} className={`px-4 py-2 rounded-xl font-game text-[9px] shrink-0 transition-all ${storeTab === 'sell' ? 'bg-emerald-500 text-white' : 'bg-white text-emerald-700 shadow-sm'}`}>VENDER</button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 mt-2 min-h-0">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 mt-2 min-h-0 bg-amber-100/30">
               {storeTab === 'materials' && Object.values(MATERIALS).map(m => (
                 <div key={m.type} className="flex items-center justify-between p-3 bg-white rounded-2xl border shadow-sm gap-2">
                   <div className="flex items-center gap-3 overflow-hidden">
@@ -384,8 +383,9 @@ const App: React.FC = () => {
               {storeTab === 'sell' && Object.entries(gameState.inventory).map(([name, qty]) => (
                 (qty as number) > 0 && (
                   <div key={name} className="flex items-center justify-between p-3 bg-white rounded-2xl border shadow-sm gap-2">
-                    <div className="flex items-center gap-3 overflow-hidden">
-                      <span className="font-game text-xs text-emerald-900 truncate">{name} (x{qty})</span>
+                    <div className="flex items-center gap-3 overflow-hidden flex-1">
+                      <span className="font-game text-xs text-emerald-900 truncate">{name}</span>
+                      <span className="bg-emerald-100 text-emerald-700 px-2 rounded-lg text-[9px] font-bold">x{qty}</span>
                     </div>
                     <button onClick={() => {
                        const crop = (Object.values(CROPS) as CropData[]).find(c => c.name === name);
@@ -404,7 +404,7 @@ const App: React.FC = () => {
             </div>
             
             <div className="p-6 bg-white border-t flex justify-between items-center shrink-0">
-              <div className="font-game text-lg text-amber-600">💰 {gameState.coins}</div>
+              <div className="font-game text-lg text-amber-600">💰 Moedas: {gameState.coins}</div>
               <button onClick={() => setIsStoreOpen(false)} className="bg-amber-500 text-white font-game px-8 py-3 rounded-2xl text-[10px] shadow-lg border-b-4 border-amber-700 active:translate-y-1 active:border-b-0 transition-all uppercase tracking-widest">Fechar</button>
             </div>
           </div>

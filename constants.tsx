@@ -9,14 +9,18 @@ export const CROPS: Record<CropType, CropData> = {
   [CropType.STRAWBERRY]: { type: CropType.STRAWBERRY, name: 'Morango', growthTime: 45, value: 180, cost: 30, icon: '🍓', color: 'bg-red-400', minLevel: 9 },
   [CropType.TOMATO]: { type: CropType.TOMATO, name: 'Tomate', growthTime: 60, value: 300, cost: 45, icon: '🍅', color: 'bg-red-500', minLevel: 12 },
   [CropType.PUMPKIN]: { type: CropType.PUMPKIN, name: 'Abóbora', growthTime: 120, value: 850, cost: 100, icon: '🎃', color: 'bg-orange-600', minLevel: 15 },
-  [CropType.DRAGON_FRUIT]: { type: CropType.DRAGON_FRUIT, name: 'Fruta Dragão', growthTime: 300, value: 3200, cost: 350, icon: '🐲', color: 'bg-purple-600', minLevel: 20 },
-  [CropType.PINEAPPLE]: { type: CropType.PINEAPPLE, name: 'Abacaxi', growthTime: 600, value: 7500, cost: 800, icon: '🍍', color: 'bg-yellow-500', minLevel: 30 },
-  [CropType.GIANT_WATERMELON]: { type: CropType.GIANT_WATERMELON, name: 'Melancia G.', growthTime: 1200, value: 18000, cost: 2000, icon: '🍉', color: 'bg-green-500', minLevel: 50 }
+  [CropType.BLACKBERRY]: { type: CropType.BLACKBERRY, name: 'Amora', growthTime: 180, value: 1200, cost: 150, icon: '🫐', color: 'bg-purple-800', minLevel: 18 },
+  [CropType.CHERRY]: { type: CropType.CHERRY, name: 'Cereja', growthTime: 240, value: 1800, cost: 220, icon: '🍒', color: 'bg-red-600', minLevel: 22 },
+  [CropType.BANANA]: { type: CropType.BANANA, name: 'Banana', growthTime: 360, value: 2800, cost: 300, icon: '🍌', color: 'bg-yellow-300', minLevel: 25 },
+  [CropType.DRAGON_FRUIT]: { type: CropType.DRAGON_FRUIT, name: 'Fruta Dragão', growthTime: 600, value: 5500, cost: 600, icon: '🐲', color: 'bg-purple-600', minLevel: 30 },
+  [CropType.PINEAPPLE]: { type: CropType.PINEAPPLE, name: 'Abacaxi', growthTime: 1200, value: 12000, cost: 1200, icon: '🍍', color: 'bg-yellow-500', minLevel: 40 },
+  [CropType.GIANT_WATERMELON]: { type: CropType.GIANT_WATERMELON, name: 'Melancia G.', growthTime: 2400, value: 35000, cost: 3500, icon: '🍉', color: 'bg-green-500', minLevel: 60 }
 };
 
 export const ANIMALS: Record<AnimalType, AnimalData> = {
   [AnimalType.CHICKEN]: { type: AnimalType.CHICKEN, name: 'Galinha', produceName: 'Ovo', produceIcon: '🥚', produceTime: 20, produceValue: 80, cost: 100, icon: '🐔' },
-  [AnimalType.COW]: { type: AnimalType.COW, name: 'Vaca', produceName: 'Leite', produceIcon: '🥛', produceTime: 45, produceValue: 250, cost: 250, icon: '🐄' }
+  [AnimalType.COW]: { type: AnimalType.COW, name: 'Vaca', produceName: 'Leite', produceIcon: '🥛', produceTime: 45, produceValue: 250, cost: 250, icon: '🐄' },
+  [AnimalType.BEE]: { type: AnimalType.BEE, name: 'Abelha', produceName: 'Mel', produceIcon: '🍯', produceTime: 15, produceValue: 120, cost: 400, icon: '🐝' }
 };
 
 export const MATERIALS: Record<MaterialType, MaterialData> = {
@@ -33,7 +37,6 @@ export const HOUSE_UPGRADES = [
   { level: 4, name: "Mansão Colonial", icon: "🏛️", req: { [MaterialType.WOOD]: 60, [MaterialType.BRICK]: 60, [MaterialType.TILE]: 40 }, cost: 25000 }
 ];
 
-// XP agora é progressivo (Nível * Multiplicador)
 export const XP_BASE = 250; 
 export const INITIAL_COINS = 100;
 export const INITIAL_PLOT_COUNT = 6;

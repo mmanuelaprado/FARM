@@ -7,6 +7,9 @@ export enum CropType {
   STRAWBERRY = 'STRAWBERRY',
   TOMATO = 'TOMATO',
   PUMPKIN = 'PUMPKIN',
+  BLACKBERRY = 'BLACKBERRY',
+  CHERRY = 'CHERRY',
+  BANANA = 'BANANA',
   DRAGON_FRUIT = 'DRAGON_FRUIT',
   PINEAPPLE = 'PINEAPPLE',
   GIANT_WATERMELON = 'GIANT_WATERMELON'
@@ -14,7 +17,8 @@ export enum CropType {
 
 export enum AnimalType {
   CHICKEN = 'CHICKEN',
-  COW = 'COW'
+  COW = 'COW',
+  BEE = 'BEE'
 }
 
 export enum ToolType {
