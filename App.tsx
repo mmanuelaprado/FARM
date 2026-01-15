@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { CropType, GameState, Plot, ToolType, AnimalType, AnimalSlot, MaterialType, CropData, AnimalData } from './types';
-import { CROPS, ANIMALS, MATERIALS, HOUSE_UPGRADES, INITIAL_COINS, INITIAL_PLOT_COUNT, XP_PER_LEVEL, PLOT_UNLOCK_COST, MAX_PLOT_COUNT } from './constants';
+import { CROPS, ANIMALS, MATERIALS, HOUSE_UPGRADES, INITIAL_COINS, INITIAL_PLOT_COUNT, XP_BASE, PLOT_UNLOCK_COST, MAX_PLOT_COUNT } from './constants';
 import PlotCard from './components/PlotCard';
 import { getFarmAdvice } from './services/geminiService';
 import { audioService } from './services/audioService';
@@ -64,6 +64,9 @@ const App: React.FC = () => {
   const [floatingTexts, setFloatingTexts] = useState<FloatingText[]>([]);
   const [currentTime, setCurrentTime] = useState(Date.now());
 
+  // Calcula XP necessário para o próximo nível (Progressivo)
+  const xpToNextLevel = gameState.level * XP_BASE;
+
   useEffect(() => {
     setIsLoaded(true);
     const timer = setInterval(() => setCurrentTime(Date.now()), 1000);
@@ -77,21 +80,21 @@ const App: React.FC = () => {
     }
   }, [gameState, plots, isLoaded]);
 
-  useEffect(() => {
-    const fetchAdvice = async () => {
-      await getFarmAdvice(gameState.coins, gameState.level, gameState.inventory);
-    };
-    if (isLoaded) {
-      fetchAdvice();
-      adviceIntervalRef.current = setInterval(fetchAdvice, 300000);
-    }
-    return () => clearInterval(adviceIntervalRef.current);
-  }, [gameState.level, isLoaded]);
-
   const addFloatingText = (x: number, y: number, text: string, icon?: string) => {
     const id = Date.now() + Math.random();
     setFloatingTexts(prev => [...prev, { id, x, y, text, icon }]);
     setTimeout(() => setFloatingTexts(prev => prev.filter(t => t.id !== id)), 1200);
+  };
+
+  const handleLevelUp = (currentXp: number, currentLevel: number) => {
+    let newXp = currentXp;
+    let newLevel = currentLevel;
+    while (newXp >= newLevel * XP_BASE) {
+      newXp -= (newLevel * XP_BASE);
+      newLevel++;
+      addFloatingText(window.innerWidth/2, 100, `LEVEL UP! ${newLevel}`, "🎉");
+    }
+    return { xp: newXp, level: newLevel };
   };
 
   const upgradeHouse = () => {
@@ -111,20 +114,20 @@ const App: React.FC = () => {
         Object.entries(upgrade.req).forEach(([mat, qty]) => {
           newMaterials[mat as MaterialType] -= (qty as number);
         });
-        const xpGain = 500;
-        const newXp = prev.xp + xpGain;
+        const xpGain = 150; // Reduzido de 500
+        const result = handleLevelUp(prev.xp + xpGain, prev.level);
         return {
           ...prev,
           coins: prev.coins - upgrade.cost,
           materialInventory: newMaterials,
           houseLevel: nextLevel,
-          xp: newXp,
-          level: Math.floor(newXp / XP_PER_LEVEL) + 1
+          xp: result.xp,
+          level: result.level
         };
       });
       addFloatingText(window.innerWidth/2, window.innerHeight/2, "CASA EVOLUÍDA!", "🔨");
     } else {
-      addFloatingText(window.innerWidth/2, window.innerHeight/2, "Recursos insuficientes!", "❌");
+      addFloatingText(window.innerWidth/2, window.innerHeight/2, "Faltam recursos!", "❌");
     }
   };
 
@@ -138,12 +141,12 @@ const App: React.FC = () => {
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
       addFloatingText(rect.left + rect.width / 2, rect.top, `+1 ${data.produceIcon}`, data.produceIcon);
       setGameState(prev => {
-        const xpGain = 30;
-        const newXp = prev.xp + xpGain;
+        const xpGain = 10; // Reduzido de 30
+        const result = handleLevelUp(prev.xp + xpGain, prev.level);
         return {
           ...prev,
-          xp: newXp,
-          level: Math.floor(newXp / XP_PER_LEVEL) + 1,
+          xp: result.xp,
+          level: result.level,
           inventory: { ...prev.inventory, [data.produceName]: (prev.inventory[data.produceName] || 0) + 1 },
           animals: prev.animals.map(a => a.id === id ? { ...a, lastProducedAt: Date.now() } : a)
         };
@@ -163,11 +166,14 @@ const App: React.FC = () => {
             <span className="text-xl">💰</span>
             <span className="font-game text-base text-amber-700">{gameState.coins}</span>
           </div>
-          <div className="bg-white/95 backdrop-blur px-2 py-1.5 rounded-xl border border-blue-400 w-24 shadow-sm">
-            <div className="h-1.5 bg-blue-100 rounded-full overflow-hidden">
-              <div className="h-full bg-blue-500" style={{ width: `${(gameState.xp % XP_PER_LEVEL)}%` }} />
+          <div className="bg-white/95 backdrop-blur px-2 py-1.5 rounded-xl border border-blue-400 w-28 shadow-sm">
+            <div className="h-2 bg-blue-100 rounded-full overflow-hidden">
+              <div className="h-full bg-blue-500 transition-all duration-500" style={{ width: `${(gameState.xp / xpToNextLevel) * 100}%` }} />
             </div>
-            <span className="text-[10px] font-bold text-blue-600 block text-center mt-1 font-game">Lvl {gameState.level}</span>
+            <div className="flex justify-between items-center mt-1 px-1">
+              <span className="text-[9px] font-bold text-blue-600 font-game">Lvl {gameState.level}</span>
+              <span className="text-[8px] text-blue-400 font-bold">{Math.floor(gameState.xp)}/{xpToNextLevel}</span>
+            </div>
           </div>
         </div>
         
@@ -207,8 +213,9 @@ const App: React.FC = () => {
                         const ready = (Date.now() - (plotRef.plantedAt || 0)) / 1000 > growthNeeded;
                         if(ready) {
                           setGameState(p => {
-                            const newXp = p.xp + 20;
-                            return {...p, xp: newXp, level: Math.floor(newXp / XP_PER_LEVEL) + 1, inventory: {...p.inventory, [c.name]: (p.inventory[c.name]||0)+1}};
+                            const xpGain = 5; // Reduzido de 20
+                            const result = handleLevelUp(p.xp + xpGain, p.level);
+                            return {...p, xp: result.xp, level: result.level, inventory: {...p.inventory, [c.name]: (p.inventory[c.name]||0)+1}};
                           });
                           setPlots(ps => ps.map(p => p.id === id ? {...p, crop: null, plantedAt: null, watered: false} : p));
                           audioService.playHarvest();
@@ -319,43 +326,43 @@ const App: React.FC = () => {
       {/* CENTRAL STORE MODAL */}
       {isStoreOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in">
-          <div className="bg-amber-50 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[85vh] border-4 border-white/20">
+          <div className="bg-amber-50 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border-4 border-white/20">
             <div className="bg-amber-500 p-5 flex justify-between items-center text-white shrink-0">
               <h2 className="font-game text-xl uppercase tracking-wider">Mercado Central</h2>
               <button onClick={() => setIsStoreOpen(false)} className="text-2xl p-2 bg-black/10 rounded-full w-10 h-10 flex items-center justify-center">✕</button>
             </div>
             
             <div className="flex gap-1 px-4 mt-4 overflow-x-auto scrollbar-hide shrink-0">
-              <button onClick={() => setStoreTab('buy')} className={`px-4 py-2 rounded-xl font-game text-[9px] shrink-0 ${storeTab === 'buy' ? 'bg-green-500 text-white' : 'bg-white text-green-700'}`}>SEMENTES</button>
-              <button onClick={() => setStoreTab('animals')} className={`px-4 py-2 rounded-xl font-game text-[9px] shrink-0 ${storeTab === 'animals' ? 'bg-orange-500 text-white' : 'bg-white text-orange-700'}`}>ANIMAIS</button>
-              <button onClick={() => setStoreTab('materials')} className={`px-4 py-2 rounded-xl font-game text-[9px] shrink-0 ${storeTab === 'materials' ? 'bg-indigo-500 text-white' : 'bg-white text-indigo-700'}`}>MATERIAIS</button>
-              <button onClick={() => setStoreTab('sell')} className={`px-4 py-2 rounded-xl font-game text-[9px] shrink-0 ${storeTab === 'sell' ? 'bg-emerald-500 text-white' : 'bg-white text-emerald-700'}`}>VENDER</button>
+              <button onClick={() => setStoreTab('buy')} className={`px-4 py-2 rounded-xl font-game text-[9px] shrink-0 transition-all ${storeTab === 'buy' ? 'bg-green-500 text-white' : 'bg-white text-green-700'}`}>SEMENTES</button>
+              <button onClick={() => setStoreTab('animals')} className={`px-4 py-2 rounded-xl font-game text-[9px] shrink-0 transition-all ${storeTab === 'animals' ? 'bg-orange-500 text-white' : 'bg-white text-orange-700'}`}>ANIMAIS</button>
+              <button onClick={() => setStoreTab('materials')} className={`px-4 py-2 rounded-xl font-game text-[9px] shrink-0 transition-all ${storeTab === 'materials' ? 'bg-indigo-500 text-white' : 'bg-white text-indigo-700'}`}>MATERIAIS</button>
+              <button onClick={() => setStoreTab('sell')} className={`px-4 py-2 rounded-xl font-game text-[9px] shrink-0 transition-all ${storeTab === 'sell' ? 'bg-emerald-500 text-white' : 'bg-white text-emerald-700'}`}>VENDER</button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-2 mt-2">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 mt-2 min-h-0">
               {storeTab === 'materials' && Object.values(MATERIALS).map(m => (
-                <div key={m.type} className="flex items-center justify-between p-3 bg-white rounded-2xl border shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">{m.icon}</span>
-                    <span className="font-game text-xs text-indigo-900">{m.name}</span>
+                <div key={m.type} className="flex items-center justify-between p-3 bg-white rounded-2xl border shadow-sm gap-2">
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <span className="text-3xl shrink-0">{m.icon}</span>
+                    <span className="font-game text-xs text-indigo-900 truncate">{m.name}</span>
                   </div>
-                  <button onClick={() => { if(gameState.coins >= m.cost) { setGameState(p => ({...p, coins: p.coins - m.cost, materialInventory: {...p.materialInventory, [m.type]: p.materialInventory[m.type] + 1}})); audioService.playPop(); } }} className={`text-white px-4 py-2 rounded-xl text-[9px] font-game border-b-4 transition-all ${gameState.coins >= m.cost ? 'bg-indigo-500 border-indigo-700 active:border-b-0 active:translate-y-1' : 'bg-gray-400 border-gray-500 opacity-60'}`}>${m.cost}</button>
+                  <button onClick={() => { if(gameState.coins >= m.cost) { setGameState(p => ({...p, coins: p.coins - m.cost, materialInventory: {...p.materialInventory, [m.type]: p.materialInventory[m.type] + 1}})); audioService.playPop(); } }} className={`text-white px-4 py-2 rounded-xl text-[9px] font-game border-b-4 shrink-0 transition-all ${gameState.coins >= m.cost ? 'bg-indigo-500 border-indigo-700 active:border-b-0 active:translate-y-1' : 'bg-gray-400 border-gray-500 opacity-60'}`}>${m.cost}</button>
                 </div>
               ))}
               
               {storeTab === 'buy' && (Object.keys(CROPS) as CropType[]).map(type => {
                 const isLocked = (CROPS[type].minLevel || 0) > gameState.level;
                 return (
-                  <div key={type} className={`flex items-center justify-between p-3 bg-white rounded-2xl border shadow-sm ${isLocked ? 'opacity-40 grayscale' : ''}`}>
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl">{isLocked ? '🔒' : CROPS[type].icon}</span>
-                      <div className="flex flex-col">
-                        <span className="font-game text-xs">{isLocked ? 'Bloqueado' : CROPS[type].name}</span>
+                  <div key={type} className={`flex items-center justify-between p-3 bg-white rounded-2xl border shadow-sm gap-2 ${isLocked ? 'opacity-40 grayscale' : ''}`}>
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <span className="text-3xl shrink-0">{isLocked ? '🔒' : CROPS[type].icon}</span>
+                      <div className="flex flex-col overflow-hidden">
+                        <span className="font-game text-xs truncate">{isLocked ? 'Bloqueado' : CROPS[type].name}</span>
                         {isLocked && <span className="text-[8px] font-bold text-red-600">Lvl {CROPS[type].minLevel}</span>}
                       </div>
                     </div>
                     {!isLocked && (
-                      <button onClick={() => { if(gameState.coins >= CROPS[type].cost) { setGameState(p => ({...p, coins: p.coins - CROPS[type].cost, seedInventory: {...p.seedInventory, [type]: (p.seedInventory[type] || 0) + 1}})); audioService.playPop(); } }} className={`text-white px-4 py-2 rounded-xl text-[9px] font-game border-b-4 transition-all ${gameState.coins >= CROPS[type].cost ? 'bg-green-500 border-green-700 active:border-b-0 active:translate-y-1' : 'bg-gray-400 border-gray-500 opacity-60'}`}>${CROPS[type].cost}</button>
+                      <button onClick={() => { if(gameState.coins >= CROPS[type].cost) { setGameState(p => ({...p, coins: p.coins - CROPS[type].cost, seedInventory: {...p.seedInventory, [type]: (p.seedInventory[type] || 0) + 1}})); audioService.playPop(); } }} className={`text-white px-4 py-2 rounded-xl text-[9px] font-game border-b-4 shrink-0 transition-all ${gameState.coins >= CROPS[type].cost ? 'bg-green-500 border-green-700 active:border-b-0 active:translate-y-1' : 'bg-gray-400 border-gray-500 opacity-60'}`}>${CROPS[type].cost}</button>
                     )}
                   </div>
                 );
@@ -364,21 +371,21 @@ const App: React.FC = () => {
               {storeTab === 'animals' && (Object.keys(ANIMALS) as AnimalType[]).map(type => {
                 const data = ANIMALS[type];
                 return (
-                  <div key={type} className="flex items-center justify-between p-3 bg-white rounded-2xl border shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl">{data.icon}</span>
-                      <span className="font-game text-xs text-orange-900">{data.name}</span>
+                  <div key={type} className="flex items-center justify-between p-3 bg-white rounded-2xl border shadow-sm gap-2">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <span className="text-3xl shrink-0">{data.icon}</span>
+                      <span className="font-game text-xs text-orange-900 truncate">{data.name}</span>
                     </div>
-                    <button onClick={() => { if(gameState.coins >= data.cost) { setGameState(p => ({...p, coins: p.coins - data.cost, animals: [...p.animals, {id: Date.now(), type, lastProducedAt: Date.now()}]})); audioService.playPop(); } }} className={`text-white px-4 py-2 rounded-xl text-[9px] font-game border-b-4 transition-all ${gameState.coins >= data.cost ? 'bg-orange-500 border-orange-700 active:border-b-0 active:translate-y-1' : 'bg-gray-400 border-gray-500 opacity-60'}`}>${data.cost}</button>
+                    <button onClick={() => { if(gameState.coins >= data.cost) { setGameState(p => ({...p, coins: p.coins - data.cost, animals: [...p.animals, {id: Date.now(), type, lastProducedAt: Date.now()}]})); audioService.playPop(); } }} className={`text-white px-4 py-2 rounded-xl text-[9px] font-game border-b-4 shrink-0 transition-all ${gameState.coins >= data.cost ? 'bg-orange-500 border-orange-700 active:border-b-0 active:translate-y-1' : 'bg-gray-400 border-gray-500 opacity-60'}`}>${data.cost}</button>
                   </div>
                 );
               })}
 
               {storeTab === 'sell' && Object.entries(gameState.inventory).map(([name, qty]) => (
                 (qty as number) > 0 && (
-                  <div key={name} className="flex items-center justify-between p-3 bg-white rounded-2xl border shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <span className="font-game text-xs">{name} (x{qty})</span>
+                  <div key={name} className="flex items-center justify-between p-3 bg-white rounded-2xl border shadow-sm gap-2">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <span className="font-game text-xs text-emerald-900 truncate">{name} (x{qty})</span>
                     </div>
                     <button onClick={() => {
                        const crop = (Object.values(CROPS) as CropData[]).find(c => c.name === name);
@@ -387,14 +394,17 @@ const App: React.FC = () => {
                        setGameState(p => ({...p, coins: p.coins + val, inventory: {...p.inventory, [name]: (p.inventory[name] || 0) - 1}}));
                        audioService.playCash();
                        addFloatingText(window.innerWidth/2, 100, `+$${val}`, "💰");
-                    }} className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-[9px] font-game border-b-4 border-emerald-800 active:translate-y-1 active:border-b-0">VENDER (${ (Object.values(CROPS) as CropData[]).find(c => c.name === name)?.value || (Object.values(ANIMALS) as AnimalData[]).find(a => a.produceName === name)?.produceValue || 10 })</button>
+                    }} className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-[9px] font-game border-b-4 border-emerald-800 shrink-0 active:translate-y-1 active:border-b-0 transition-all">VENDER (${ (Object.values(CROPS) as CropData[]).find(c => c.name === name)?.value || (Object.values(ANIMALS) as AnimalData[]).find(a => a.produceName === name)?.produceValue || 10 })</button>
                   </div>
                 )
               ))}
+              {storeTab === 'sell' && Object.values(gameState.inventory).every(q => (q as number) === 0) && (
+                <div className="text-center py-10 opacity-40 font-game text-[10px]">Inventário Vazio</div>
+              )}
             </div>
             
             <div className="p-6 bg-white border-t flex justify-between items-center shrink-0">
-              <div className="font-game text-lg text-amber-600">💰 Moedas: {gameState.coins}</div>
+              <div className="font-game text-lg text-amber-600">💰 {gameState.coins}</div>
               <button onClick={() => setIsStoreOpen(false)} className="bg-amber-500 text-white font-game px-8 py-3 rounded-2xl text-[10px] shadow-lg border-b-4 border-amber-700 active:translate-y-1 active:border-b-0 transition-all uppercase tracking-widest">Fechar</button>
             </div>
           </div>
