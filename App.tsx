@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { CropType, GameState, Plot, ToolType, AnimalType, AnimalSlot, MaterialType, CropData, AnimalData } from './types';
+
+import React, { useState, useEffect } from 'react';
+import { CropType, GameState, Plot, ToolType, AnimalType, MaterialType, CropData, AnimalData } from './types';
 import { CROPS, ANIMALS, MATERIALS, HOUSE_UPGRADES, INITIAL_COINS, INITIAL_PLOT_COUNT, XP_BASE, PLOT_UNLOCK_COST, MAX_PLOT_COUNT } from './constants';
 import PlotCard from './components/PlotCard';
 import { audioService } from './services/audioService';
@@ -13,6 +14,7 @@ interface FloatingText {
 }
 
 const App: React.FC = () => {
+  const [gameStarted, setGameStarted] = useState(false);
   const [activeTab, setActiveTab] = useState<'crops' | 'ranch' | 'house'>('crops');
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -143,8 +145,111 @@ const App: React.FC = () => {
 
   if (!isLoaded) return null;
 
+  // TELA INICIAL
+  if (!gameStarted) {
+    return (
+      <div className="fixed inset-0 z-[500] bg-gradient-to-b from-green-400 via-green-500 to-emerald-600 overflow-y-auto overflow-x-hidden p-6 text-white font-game flex flex-col items-center">
+        <div className="max-w-2xl w-full flex flex-col items-center">
+          {/* LOGO E NOME */}
+          <div className="text-center mt-12 animate-bounce-slow">
+            <span className="text-8xl md:text-9xl block mb-2 drop-shadow-xl">🌾</span>
+            <h1 className="text-5xl md:text-7xl uppercase tracking-tighter drop-shadow-2xl">Harvest Farm</h1>
+            <p className="text-lg md:text-xl text-green-100 mt-2 font-game bg-black/10 px-4 py-1 rounded-full inline-block">Local Edition</p>
+          </div>
+
+          <button 
+            onClick={() => { audioService.playPop(); setGameStarted(true); }}
+            className="mt-12 bg-yellow-400 hover:bg-yellow-300 text-yellow-900 text-3xl px-12 py-5 rounded-[2.5rem] shadow-[0_10px_0_#b45309] active:translate-y-2 active:shadow-none transition-all animate-pulse-fast border-4 border-white"
+          >
+            JOGAR AGORA!
+          </button>
+
+          {/* HISTÓRIA */}
+          <section className="mt-20 w-full bg-white/20 backdrop-blur-md p-8 rounded-[3rem] border-2 border-white/30">
+            <h2 className="text-3xl mb-4 flex items-center gap-3">📜 História</h2>
+            <p className="text-lg leading-relaxed font-sans font-semibold">
+              Você acaba de herdar a antiga fazenda do seu avô em uma ilha isolada. 
+              O solo é mágico e o tempo corre de forma única! Sua missão é restaurar a glória da 
+              fazenda, expandir seus lotes, cuidar de animais raros e construir uma mansão digna de um barão da agricultura.
+            </p>
+          </section>
+
+          {/* LISTA DE ANIMAIS */}
+          <section className="mt-8 w-full">
+            <h2 className="text-3xl mb-6 text-center">🐾 Nossos Moradores</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {Object.values(ANIMALS).map(a => (
+                <div key={a.type} className="bg-white/95 p-6 rounded-3xl shadow-xl flex flex-col items-center text-slate-800">
+                  <span className="text-6xl mb-2">{a.icon}</span>
+                  <h3 className="text-xl">{a.name}</h3>
+                  <p className="text-[10px] text-center uppercase font-bold text-orange-600">Produz: {a.produceIcon} {a.produceName}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* COMO JOGAR */}
+          <section className="mt-8 w-full bg-amber-500/30 p-8 rounded-[3rem] border-2 border-amber-300">
+            <h2 className="text-3xl mb-6 text-center">📖 Como Jogar</h2>
+            <div className="space-y-4 font-sans font-bold">
+              <div className="flex items-center gap-4 bg-white/10 p-4 rounded-2xl">
+                <span className="bg-white text-amber-600 w-10 h-10 rounded-full flex items-center justify-center text-xl">1</span>
+                <p>Compre sementes no 🏪 Mercado e plante na terra.</p>
+              </div>
+              <div className="flex items-center gap-4 bg-white/10 p-4 rounded-2xl">
+                <span className="bg-white text-amber-600 w-10 h-10 rounded-full flex items-center justify-center text-xl">2</span>
+                <p>Use a 💧 Água para acelerar o crescimento em 2x!</p>
+              </div>
+              <div className="flex items-center gap-4 bg-white/10 p-4 rounded-2xl">
+                <span className="bg-white text-amber-600 w-10 h-10 rounded-full flex items-center justify-center text-xl">3</span>
+                <p>Colha clicando na planta madura e venda no Mercado por 💰 Moedas.</p>
+              </div>
+            </div>
+          </section>
+
+          {/* PRODUÇÃO */}
+          <section className="mt-8 w-full bg-indigo-600/30 p-8 rounded-[3rem] border-2 border-indigo-400">
+            <h2 className="text-3xl mb-4">⚙️ Produção & Estratégia</h2>
+            <p className="font-sans font-bold">
+              Regar não é obrigatório, mas reduz o tempo de crescimento pela metade. 
+              Animais produzem recursos automaticamente a cada ciclo. 
+              Dica: Foque em materiais como Madeira e Tijolo para evoluir sua Casa e ganhar bônus de XP massivos!
+            </p>
+          </section>
+
+          {/* FOTOS DO JOGO (SIMULADO COM EMOJIS/DESIGN) */}
+          <section className="mt-8 w-full mb-20 text-center">
+            <h2 className="text-3xl mb-6">📸 Galeria da Fazenda</h2>
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide px-2">
+              <div className="min-w-[280px] h-48 bg-green-800 rounded-3xl flex items-center justify-center border-4 border-white relative overflow-hidden shadow-2xl">
+                <span className="text-6xl absolute top-4 left-4 opacity-30">🌻</span>
+                <span className="text-6xl absolute bottom-4 right-4 opacity-30">🚜</span>
+                <p className="text-xl">Horta Vibrante</p>
+              </div>
+              <div className="min-w-[280px] h-48 bg-orange-700 rounded-3xl flex items-center justify-center border-4 border-white relative overflow-hidden shadow-2xl">
+                <span className="text-6xl absolute top-4 left-4 opacity-30">🐮</span>
+                <span className="text-6xl absolute bottom-4 right-4 opacity-30">🍯</span>
+                <p className="text-xl">Rancho Fértil</p>
+              </div>
+              <div className="min-w-[280px] h-48 bg-indigo-900 rounded-3xl flex items-center justify-center border-4 border-white relative overflow-hidden shadow-2xl">
+                <span className="text-6xl absolute top-4 left-4 opacity-30">🏛️</span>
+                <span className="text-6xl absolute bottom-4 right-4 opacity-30">💎</span>
+                <p className="text-xl">Mansão Colonial</p>
+              </div>
+            </div>
+          </section>
+        </div>
+        <style>{`
+          .animate-pulse-fast { animation: pulse-fast 1.5s infinite ease-in-out; }
+          @keyframes pulse-fast { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        `}</style>
+      </div>
+    );
+  }
+
+  // JOGO PRINCIPAL
   return (
-    <div className="fixed inset-0 flex flex-col bg-gradient-to-b from-sky-400 to-sky-200 overflow-hidden text-slate-800 touch-none select-none h-[100dvh] pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)]">
+    <div className="fixed inset-0 flex flex-col bg-gradient-to-b from-sky-400 to-sky-200 overflow-hidden text-slate-800 touch-none select-none h-[100dvh] pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] animate-in fade-in duration-1000">
       
       {/* HEADER STATS */}
       <div className="z-10 px-4 pt-4 flex justify-between items-start shrink-0">
